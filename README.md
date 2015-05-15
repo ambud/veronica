@@ -1,4 +1,7 @@
-Veronica is an open source high performance Graph Database intended to be used at Web Scale in the cloud.
+Veronica is an open source high performance Secure Graph Database intended to be used at Web Scale in the cloud.
 
-Graph Databases are becoming more and more critical every day because of the growing complexity of data and it's connectivity
-in the world.
+Graph Databases are becoming more and more critical each day because of the growing complexity of data and it's connectivity
+in the real world.
+
+Veronica is a stab at creating a Secure, High Performance Graph Database from scratch, leaving the complexity of legacy NoSQL
+behind and creating something that will match the needs of the modern enterprise.
