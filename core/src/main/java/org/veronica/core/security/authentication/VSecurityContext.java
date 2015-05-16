@@ -16,34 +16,29 @@
  */
 package org.veronica.core.security.authentication;
 
+import org.veronica.core.security.authentication.credentials.KerberosCredentials;
+import org.veronica.core.security.authentication.credentials.SimpleUsernamePasswordCredentials;
+
 /**
- * Security Manager class for the database. It's a singleton and is responsible for managing the security plugins for the graph database.
+ * Inspired by Hadoop's UserGroupInformation class, the VSecurityManager is a Security Manager for Veronica.
+ * 
+ * 
+ * 
  * @author ambudsharma
  *
  */
-public class VSecurityManager {
+public class VSecurityContext {
 	
-	private static VSecurityManager self = new VSecurityManager();
-	
-	/**
-	 * Constructor for the security manager
-	 */
-	private VSecurityManager() {
-		init();
+	public VSecurityContext() {
 	}
 	
-	/**
-	 * @return instance of the security manager
-	 */
-	public static VSecurityManager getInstance() {
-		return self;
+	public static VSecurityContext createSecurityContext(VSecurityCredential credentials) {
+		if(credentials instanceof SimpleUsernamePasswordCredentials) {
+			
+		}else if(credentials instanceof KerberosCredentials) {
+			
+		}
+		return new VSecurityContext();
 	}
 	
-	/**
-	 * Initializes the security manager
-	 */
-	protected void init() {
-		
-	}
-
 }

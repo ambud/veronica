@@ -16,34 +16,10 @@
  */
 package org.veronica.core.security.authentication;
 
-/**
- * Security Manager class for the database. It's a singleton and is responsible for managing the security plugins for the graph database.
- * @author ambudsharma
- *
- */
-public class VSecurityManager {
-	
-	private static VSecurityManager self = new VSecurityManager();
-	
-	/**
-	 * Constructor for the security manager
-	 */
-	private VSecurityManager() {
-		init();
-	}
-	
-	/**
-	 * @return instance of the security manager
-	 */
-	public static VSecurityManager getInstance() {
-		return self;
-	}
-	
-	/**
-	 * Initializes the security manager
-	 */
-	protected void init() {
-		
-	}
+public interface VSecurityCredential {
 
+	public String getUsername();
+	
+	public String getSecret();
+	
 }

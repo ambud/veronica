@@ -29,15 +29,15 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.util.config.YamlConfiguration;
+import org.veronica.core.configuration.ConfigurationManager.ConfigType;
 
+/**
+ * Implementation of the TinkerPop Blueprints Graph API / Framework
+ * @author ambudsharma
+ *
+ */
 public class VGraph implements Graph {
 
-	public static enum ConfigType {
-		YAML,
-		XML,
-		PROP
-	};
-	
 	private final Configuration config;
 	
 	public VGraph() {
@@ -54,10 +54,10 @@ public class VGraph implements Graph {
 			break;
 		default:throw new ConfigurationException("Invalid configuration type");
 		}
-		startGraphDb();
+		connect();
 	}
 	
-	protected void startGraphDb() {
+	protected void connect() {
 		
 	}
 

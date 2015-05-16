@@ -14,36 +14,33 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.2
  */
-package org.veronica.core.security.authentication;
+package org.veronica.core.security.authentication.credentials;
+
+import org.veronica.core.security.authentication.VSecurityCredential;
 
 /**
- * Security Manager class for the database. It's a singleton and is responsible for managing the security plugins for the graph database.
+ * Simple username and password based credentials
+ * 
  * @author ambudsharma
- *
  */
-public class VSecurityManager {
+public class SimpleUsernamePasswordCredentials implements VSecurityCredential {
+
+	private String username;
+	private String password;
 	
-	private static VSecurityManager self = new VSecurityManager();
-	
-	/**
-	 * Constructor for the security manager
-	 */
-	private VSecurityManager() {
-		init();
+	public SimpleUsernamePasswordCredentials(String username, String password) {
+		this.username = username;
+		this.password = password;
 	}
-	
-	/**
-	 * @return instance of the security manager
-	 */
-	public static VSecurityManager getInstance() {
-		return self;
+
+	@Override
+	public String getUsername() {
+		return username;
 	}
-	
-	/**
-	 * Initializes the security manager
-	 */
-	protected void init() {
-		
+
+	@Override
+	public String getSecret() {
+		return password;
 	}
 
 }
