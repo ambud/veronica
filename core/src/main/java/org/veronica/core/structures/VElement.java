@@ -16,52 +16,144 @@
  */
 package org.veronica.core.structures;
 
-import java.util.Iterator;
+import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
-import org.apache.tinkerpop.gremlin.structure.Element;
-import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkerpop.gremlin.structure.Property;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.configuration.ConfigurationException;
+import org.veronica.core.configuration.ConfigurationManager;
+
 
 /**
+ * Abstract element of the graph with common properties that apply to both Vertices and Edges.
  * 
  * @author ambudsharma
  */
-public class VElement implements Element {
+public abstract class VElement {
 	
-	@Override
-	public Graph graph() {
-		// TODO Auto-generated method stub
-		return null;
+	private Map<String, Object> propertyMap;
+	private String key;
+	private String id;
+	private String label;
+	
+	public VElement(String id, String label) {
+		this.id = id;
+		this.label = label;
+		this.propertyMap = new HashMap<String, Object>();
+	}
+	
+	public VElement(String id, String label, String key) {
+		this.id = id;
+		this.label = label;
+		this.key = key;
+		this.propertyMap = new HashMap<String, Object>();
+	}
+	
+	protected void computeId() {
+		if(id==null) {
+			id = IdGenerator.hashSHA1(UUID.randomUUID().toString());
+		}else{
+			if(label!=null) {
+				id = IdGenerator.hashSHA1(label+"_"+id);
+			}else {
+				id = IdGenerator.hashSHA1(id);
+			}
+		}
 	}
 
-	@Override
-	public Object id() {
-		// TODO Auto-generated method stub
-		return null;
+	/**
+	 * @param label the label to set
+	 */
+	protected void setLabel(String label) {
+		this.label = label;
+	}
+	
+	/**
+	 * Put property into the element. 
+	 * 
+	 * If the key property has been initialized; this will intercept and recompute the element id 
+	 * @param propertyName
+	 * @param propertyValue
+	 */
+	public void put(String propertyName, Object propertyValue) {
+		if(key!=null && key.equalsIgnoreCase(propertyName)) {
+			id = propertyValue.toString();
+			computeId();
+		}
+		propertyMap.put(propertyName, propertyValue);
 	}
 
-	@Override
-	public String label() {
-		// TODO Auto-generated method stub
-		return null;
+	/**
+	 * @return the propertyMap
+	 */
+	protected Map<String, Object> getPropertyMap() {
+		return propertyMap;
 	}
 
-	@Override
-	public <V> Iterator<? extends Property<V>> properties(String... arg0) {
-		// TODO Auto-generated method stub
-		return null;
+	/**
+	 * @return the id
+	 */
+	protected String getId() {
+		return id;
 	}
 
-	@Override
-	public <V> Property<V> property(String arg0, V arg1) {
-		// TODO Auto-generated method stub
-		return null;
+	/**
+	 * @return the label
+	 */
+	protected String getLabel() {
+		return label;
 	}
 
-	@Override
-	public void remove() {
-		// TODO Auto-generated method stub
-
+	/**
+	 * @return the key
+	 */
+	protected String getKey() {
+		return key;
 	}
 
+	/**
+	 * @param key the key to set
+	 */
+	protected void setKey(String key) {
+		this.key = key;
+	}
+
+	public static class IdGenerator {
+		
+		private static int hashAlgo;
+		static {
+			try {
+				String algo = ConfigurationManager.getInstance().getConfig().getString("id.algorithm", "sha1");
+				switch(algo) {
+				case "sha1": hashAlgo = 0;
+					break;
+				case "md5": hashAlgo = 1;
+					break;
+				case "sha256": hashAlgo = 2;
+					break;
+				default: hashAlgo = -1;
+				}
+			} catch (ConfigurationException | URISyntaxException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		
+		private IdGenerator() {
+		}
+		
+		public static String hashSHA1(String id) {
+			if(hashAlgo == 0) {
+				return DigestUtils.sha1Hex(id);
+			}else if(hashAlgo == 1) {
+				return DigestUtils.md5Hex(id);
+			}else if(hashAlgo == 2){
+				return DigestUtils.sha256Hex(id);
+			}else {
+				return id;
+			}
+		}
+		
+	}
 }

@@ -1,5 +1,4 @@
 /*
- * Copyright 2015 Ambud Sharma
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +17,13 @@ package org.veronica.core.configuration;
 
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.logging.Logger;
 
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
-import org.apache.tinkerpop.gremlin.util.config.YamlConfiguration;
 
 /**
  * Configuration Manager singleton.
@@ -33,14 +32,14 @@ import org.apache.tinkerpop.gremlin.util.config.YamlConfiguration;
  */
 public class ConfigurationManager {
 
-	private static final String ENV_VERONICA_CONFIG = "VERONICA_CONFIG";
-	private static final String CONFIG_BASE_PREFIX = "org.veronica";
-	private static final String CONFIG_SECURITY_PREFIX = CONFIG_BASE_PREFIX+".security";
-	private static final String CONFIG_STORAGE_PREFIX = CONFIG_BASE_PREFIX+".storage";
-	public static final String VERONICA_VERSION = CONFIG_BASE_PREFIX+".version";
+	private static final Logger logger = Logger.getLogger(ConfigurationManager.class.getCanonicalName());
+	public static final String ENV_VERONICA_CONFIG = "VERONICA_CONFIG";
+	private static final String CONFIG_BASE_PREFIX = "org.veronica.";
+	private static final String CONFIG_SECURITY_PREFIX = CONFIG_BASE_PREFIX+"security.";
+	private static final String CONFIG_STORAGE_PREFIX = CONFIG_BASE_PREFIX+"storage.";
+	public static final String VERONICA_VERSION = CONFIG_BASE_PREFIX+"version";
 	
 	public static enum ConfigType {
-		YAML,
 		XML,
 		PROP
 	};
@@ -50,8 +49,15 @@ public class ConfigurationManager {
 
 	private ConfigurationManager() throws ConfigurationException, URISyntaxException {
 		Configuration configuration = loadDefaultConfiguration();
-		if(System.getenv(ENV_VERONICA_CONFIG)!=null) {
-			Configuration overrideConfig = loadConfiguration(ConfigType.PROP, System.getenv(ENV_VERONICA_CONFIG));
+		String configPath = System.getenv(ENV_VERONICA_CONFIG);
+		logger.info("Checking custom configuration in environment variable");
+		if(configPath==null) {
+			logger.info("Environment variable not found, trying system property");
+			configPath = System.getProperty(ENV_VERONICA_CONFIG);
+		}
+		if(configPath!=null) {
+			logger.info("Loading custom configuration");
+			Configuration overrideConfig = loadConfiguration(ConfigType.PROP, configPath);
 			config = new CompositeConfiguration(Arrays.asList(configuration, overrideConfig));
 		}else{
 			config = configuration;
@@ -65,8 +71,6 @@ public class ConfigurationManager {
 	protected Configuration loadConfiguration(ConfigType type, String configPath) throws ConfigurationException {
 		Configuration configuration = null;
 		switch (type) {
-		case YAML:configuration = new YamlConfiguration(configPath);
-			break;
 		case PROP:configuration = new PropertiesConfiguration(configPath);
 			break;
 		case XML:configuration = new XMLConfiguration(configPath);
