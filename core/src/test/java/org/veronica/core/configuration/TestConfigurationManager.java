@@ -26,6 +26,22 @@ import org.junit.Test;
 public class TestConfigurationManager {
 
 	@Test
+	public void testCustomConfigLoad() {
+		try {
+			System.setProperty(ConfigurationManager.ENV_VERONICA_CONFIG
+					, TestConfigurationManager.class.getResource("/config/test-config.properties").toURI().toASCIIString());
+			ConfigurationManager configurationManager = ConfigurationManager.getInstance();
+			assertNotNull(configurationManager);
+			String version = configurationManager.getRawConfig()
+					.getString(ConfigurationManager.VERONICA_VERSION);
+			System.err.println("version number:"+version);
+			assertNotNull(version);
+		} catch (ConfigurationException | URISyntaxException e) {
+			fail("Configuration manager cannot succeed without a default config path");
+		}
+	}
+	
+	@Test
 	public void testConstructorFail() {
 		try {
 			ConfigurationManager configurationManager = ConfigurationManager.getInstance();
@@ -34,6 +50,7 @@ public class TestConfigurationManager {
 					.getString(ConfigurationManager.VERONICA_VERSION);
 			System.err.println("version number:"+version);
 			assertNotNull(version);
+			assertEquals("0.0.1", version);
 		} catch (ConfigurationException | URISyntaxException e) {
 			fail("Configuration manager cannot succeed without a default config path");
 		}

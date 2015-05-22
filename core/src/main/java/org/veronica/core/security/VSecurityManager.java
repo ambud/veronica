@@ -14,36 +14,51 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.2
  */
-package org.veronica.core.security.authentication;
+package org.veronica.core.security;
+
+import java.net.URISyntaxException;
+
+import org.apache.commons.configuration.ConfigurationException;
+import org.veronica.core.configuration.ConfigurationManager;
 
 /**
  * Security Manager class for the database. It's a singleton and is responsible for managing the security plugins for the graph database.
+ * 
  * @author ambudsharma
- *
  */
 public class VSecurityManager {
 	
-	private static VSecurityManager self = new VSecurityManager();
+	private static VSecurityManager self;
 	
 	/**
 	 * Constructor for the security manager
+	 * @throws URISyntaxException 
+	 * @throws ConfigurationException 
 	 */
-	private VSecurityManager() {
+	private VSecurityManager() throws ConfigurationException, URISyntaxException {
 		init();
 	}
 	
 	/**
 	 * @return instance of the security manager
+	 * @throws URISyntaxException 
+	 * @throws ConfigurationException 
 	 */
-	public static VSecurityManager getInstance() {
+	public static VSecurityManager getInstance() throws ConfigurationException, URISyntaxException {
+		if(self==null) {
+			self = new VSecurityManager();
+		}
 		return self;
 	}
 	
 	/**
 	 * Initializes the security manager
+	 * @throws Exception 
+	 * @throws ConfigurationException 
+	 * @throws URISyntaxException 
 	 */
-	protected void init() {
-		
+	protected void init() throws ConfigurationException, URISyntaxException {
+		ConfigurationManager.getInstance();
 	}
 
 }
