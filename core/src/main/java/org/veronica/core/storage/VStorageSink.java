@@ -41,13 +41,13 @@ public abstract class VStorageSink {
 	
 	public abstract void init() throws VStorageFailureException;
 	
-	public abstract void readIndex(String graphId) throws VStorageFailureException;
+	protected abstract VSubGraph readIndex(String graphId) throws VStorageFailureException;
 	
-	public abstract void writeIndex(String graphId) throws VStorageFailureException;
+	protected abstract void writeIndex(VSubGraph graphId) throws VStorageFailureException;
 	
 	public abstract VSubGraph readGraphBlock(String graphId) throws VStorageFailureException;
 	
-	public abstract void writeGraphBlock(VSubGraph graph) throws VStorageFailureException;
+	public abstract long writeGraphBlock(VSubGraph graph) throws VStorageFailureException;
 	
 	/**
 	 * @return the sinkName

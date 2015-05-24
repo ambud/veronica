@@ -43,5 +43,12 @@ public class VVertex extends VElement {
 			vertex.edges.add(edge);
 		}
 	}
+
+	/**
+	 * @return the edges
+	 */
+	public List<VEdge> getEdges() {
+		return edges;
+	}
 	
 }

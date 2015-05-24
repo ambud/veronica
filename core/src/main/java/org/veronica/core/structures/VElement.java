@@ -17,9 +17,9 @@
 package org.veronica.core.structures;
 
 import java.net.URISyntaxException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.configuration.ConfigurationException;
@@ -41,14 +41,13 @@ public abstract class VElement {
 	public VElement(String id, String label) {
 		this.id = id;
 		this.label = label;
-		this.propertyMap = new HashMap<String, Object>();
+		this.propertyMap = new ConcurrentHashMap<String, Object>();
+		computeId();
 	}
 	
 	public VElement(String id, String label, String key) {
-		this.id = id;
-		this.label = label;
+		this(id, label);
 		this.key = key;
-		this.propertyMap = new HashMap<String, Object>();
 	}
 	
 	protected void computeId() {
@@ -88,21 +87,21 @@ public abstract class VElement {
 	/**
 	 * @return the propertyMap
 	 */
-	protected Map<String, Object> getPropertyMap() {
+	public Map<String, Object> getPropertyMap() {
 		return propertyMap;
 	}
 
 	/**
 	 * @return the id
 	 */
-	protected String getId() {
+	public String getId() {
 		return id;
 	}
 
 	/**
 	 * @return the label
 	 */
-	protected String getLabel() {
+	public String getLabel() {
 		return label;
 	}
 

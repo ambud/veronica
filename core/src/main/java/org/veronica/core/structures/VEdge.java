@@ -14,15 +14,24 @@ public class VEdge extends VElement {
 	/**
 	 * @return the inV
 	 */
-	protected VVertex getInV() {
+	public VVertex getInV() {
 		return inV;
 	}
 
 	/**
 	 * @return the outV
 	 */
-	protected VVertex getOutV() {
+	public VVertex getOutV() {
 		return outV;
+	}
+	
+	/**
+	 * Get other vertex of this edge
+	 * @param vertex
+	 * @return other vertex
+	 */
+	public VVertex getOtherVertex(VVertex vertex) {
+		return inV.getId().equalsIgnoreCase(vertex.getId())?outV:inV;
 	}
 	
 }
