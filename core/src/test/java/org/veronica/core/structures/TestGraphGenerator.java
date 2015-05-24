@@ -54,13 +54,12 @@ public class TestGraphGenerator {
 		AtomicInteger errorCount = new AtomicInteger(0);
 		IntStream.range(0, numNodes).forEachOrdered(nodeNumber->{
 			VVertex vertex = null;
-			if(randomLabel) {
-				vertex = new VVertex(graph, String.valueOf(nodeNumber), UUID.randomUUID().toString());
-			}else{
-				vertex = new VVertex(graph, null, null);
-			}
 			try {
-				graph.addVertex(vertex);
+				if(randomLabel) {
+					vertex = graph.addVertex(String.valueOf(nodeNumber), UUID.randomUUID().toString());
+				}else{
+					vertex = graph.addVertex(String.valueOf(nodeNumber), null);
+				}
 			} catch (Exception e) {
 				errorCount.incrementAndGet();
 			}

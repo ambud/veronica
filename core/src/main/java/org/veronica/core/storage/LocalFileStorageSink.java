@@ -175,7 +175,10 @@ public class LocalFileStorageSink extends VStorageSink {
 		while(stream.available()>0) {
 			String id = readElementId(stream);
 			String label = readElementId(stream);
-			
+			List<VEdge> edges = readVertexEdge(id, stream);
+			VVertex vertex = new VVertex(null, id, label);
+			vertex.getEdges().addAll(edges);
+			vertices.add(vertex);
 		}
 		return vertices;
 	}
@@ -191,14 +194,15 @@ public class LocalFileStorageSink extends VStorageSink {
 		}
 	}
 	
-	protected List<VEdge> readVertexEdge(DataInputStream stream) throws IOException {
+	protected List<VEdge> readVertexEdge(String vertexId, DataInputStream stream) throws IOException {
 		int edgeCount = stream.readInt();
 		List<VEdge> edges = new ArrayList<VEdge>(edgeCount);
 		for(int i=0;i<edgeCount;i++) {
 			String edgeId = readElementId(stream);
 			String edgeLabel = readElementLabel(stream);
 			String otherVertexId = readElementId(stream);
-//			VEdge edge = new VEdge();
+			VEdge edge = new VEdge(edgeId, edgeLabel, vertexId, otherVertexId);
+			edges.add(edge);
 		}
 		return edges;
 	}

@@ -22,11 +22,18 @@ public class VEdge extends VElement {
 	private String inV;
 	private String outV;
 	
-	protected VEdge(String id, String label, VVertex inV, VVertex outV) {
+	public VEdge(String id, String label, VVertex inV, VVertex outV) {
 		super(inV.getGraph(), id, label);
 		this.inV = inV.getId();
 		this.outV = outV.getId();
 		this.outVGraph = outV.getGraph();
+	}
+	
+	public VEdge(String id, String label, String inV, String outV) {
+		super(null, id, label);
+		this.inV = inV;
+		this.outV = outV;
+		this.outVGraph = null;
 	}
 	
 	/**

@@ -23,7 +23,7 @@ public class VVertex extends VElement {
 	
 	private List<VEdge> edges;
 
-	protected VVertex(VSubGraph graph, String id, String label) {
+	public VVertex(VSubGraph graph, String id, String label) {
 		super(graph, id, label);
 		edges = new ArrayList<VEdge>();
 	}
