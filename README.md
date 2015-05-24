@@ -1,3 +1,4 @@
+![alt tag](https://github.com/ambud/veronica/blob/master/resources/src/main/resources/veronica.png)
 Veronica is an open source high performance Secure Graph Database intended to be used at Web Scale in the cloud.
 
 Graph Databases are becoming more and more critical each day because of the growing complexity of data and it's connectivity
