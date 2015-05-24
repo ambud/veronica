@@ -1,10 +1,26 @@
+/*
+ * Copyright 2015 Ambud Sharma
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.2
+ */
 package org.veronica.core.storage.strategies;
 
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.commons.configuration.Configuration;
 import org.veronica.core.structures.VSubGraph;
-import org.veronica.core.structures.VVertex;
 
 /**
  * This Strategy family to decide how sharding of graph should be handled by Veronica.
@@ -16,6 +32,10 @@ import org.veronica.core.structures.VVertex;
  */
 public abstract class VShardStrategy extends VStorageStrategy {
 	
+	public VShardStrategy(Configuration strategyConfig, String strategyName) {
+		super(strategyConfig, strategyName);
+	}
+
 	/**
 	 * The size of each shard created using this strategy. The number must be greater than 1
 	 * @return sizeOfTheShard
