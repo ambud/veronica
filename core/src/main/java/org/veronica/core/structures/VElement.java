@@ -37,16 +37,18 @@ public abstract class VElement {
 	private String key;
 	private String id;
 	private String label;
+	private VSubGraph graph;
 	
-	public VElement(String id, String label) {
+	public VElement(VSubGraph graph, String id, String label) {
+		this.graph = graph;
 		this.id = id;
 		this.label = label;
 		this.propertyMap = new ConcurrentHashMap<String, Object>();
 		computeId();
 	}
 	
-	public VElement(String id, String label, String key) {
-		this(id, label);
+	public VElement(VSubGraph graph, String id, String label, String key) {
+		this(graph, id, label);
 		this.key = key;
 	}
 	
@@ -117,6 +119,13 @@ public abstract class VElement {
 	 */
 	protected void setKey(String key) {
 		this.key = key;
+	}
+
+	/**
+	 * @return the graph
+	 */
+	protected VSubGraph getGraph() {
+		return graph;
 	}
 
 	public static class IdGenerator {

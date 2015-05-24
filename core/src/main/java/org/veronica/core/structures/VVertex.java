@@ -23,8 +23,8 @@ public class VVertex extends VElement {
 	
 	private List<VEdge> edges;
 
-	public VVertex(String id, String label) {
-		super(id, label);
+	protected VVertex(VSubGraph graph, String id, String label) {
+		super(graph, id, label);
 		edges = new ArrayList<VEdge>();
 	}
 	
@@ -39,6 +39,10 @@ public class VVertex extends VElement {
 	public void addEdge(VVertex vertex, String label, boolean isInV) {
 		if(isInV) {
 			VEdge edge = new VEdge(null, label, vertex, this);
+			this.edges.add(edge);
+			vertex.edges.add(edge);
+		}else{
+			VEdge edge = new VEdge(null, label, this, vertex);
 			this.edges.add(edge);
 			vertex.edges.add(edge);
 		}

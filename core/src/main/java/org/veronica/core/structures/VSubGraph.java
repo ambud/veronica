@@ -22,8 +22,8 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -45,7 +45,7 @@ import com.google.common.hash.Funnels;
 public class VSubGraph {
 
 	private String graphId;
-	private Map<String, VVertex> shardVertices;
+	private ConcurrentMap<String, VVertex> shardVertices;
 	// bloom filter for the vertices in this subgraph
 	private BloomFilter<CharSequence> subGraphBloom;
 	private AtomicBoolean readOnly = new AtomicBoolean(true);
@@ -59,11 +59,24 @@ public class VSubGraph {
 	}
 	
 	/**
+	 * Add vertex with id and label information only
+	 * @param id
+	 * @param label
+	 * @return vertex
+	 * @throws ReadOnlyShardException 
+	 */
+	protected VVertex addVertex(String id, String label) throws ReadOnlyShardException {
+		VVertex vertex = new VVertex(this, id, label);
+		addVertex(vertex);
+		return vertex;
+	}
+	
+	/**
 	 * Add a vertex to this shard
 	 * @param vertex
 	 * @throws ReadOnlyShardException
 	 */
-	public void addVertex(VVertex vertex) throws ReadOnlyShardException {
+	private void addVertex(VVertex vertex) throws ReadOnlyShardException {
 		if(readOnly.get()) {
 			throw new ReadOnlyShardException("This subgraph is readonly");
 		}
@@ -78,7 +91,7 @@ public class VSubGraph {
 	 * @param vertexId
 	 * @return vertexId
 	 */
-	public VVertex getVertex(String vertexId) {
+	protected VVertex getVertex(String vertexId) {
 		return shardVertices.get(vertexId);
 	}
 
@@ -165,7 +178,7 @@ public class VSubGraph {
 	/**
 	 * @return the lastFlush timestamp
 	 */
-	protected AtomicLong getLastFlush() {
+	public AtomicLong getLastFlush() {
 		return lastFlush;
 	}
 

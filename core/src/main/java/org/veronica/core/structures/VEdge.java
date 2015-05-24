@@ -2,36 +2,59 @@ package org.veronica.core.structures;
 
 public class VEdge extends VElement {
 	
-	private VVertex inV;
-	private VVertex outV;
+	private VSubGraph outVGraph;
+	private String inV;
+	private String outV;
 	
 	protected VEdge(String id, String label, VVertex inV, VVertex outV) {
-		super(id, label);
-		this.inV = inV;
-		this.outV = outV;
+		super(inV.getGraph(), id, label);
+		this.inV = inV.getId();
+		this.outV = outV.getId();
+		this.outVGraph = outV.getGraph();
 	}
-
+	
 	/**
 	 * @return the inV
 	 */
-	public VVertex getInV() {
+	public VVertex getInVertex() {
+		return getGraph().getVertex(inV);
+	}
+
+	/**
+	 * @return the outV
+	 */
+	public VVertex getOutVertex() {
+		return getGraph().getVertex(outV);
+	}
+	
+	/**
+	 * @return the inV
+	 */
+	protected String getInV() {
 		return inV;
 	}
 
 	/**
 	 * @return the outV
 	 */
-	public VVertex getOutV() {
+	protected String getOutV() {
 		return outV;
 	}
-	
+
+	/**
+	 * @return the outVGraph
+	 */
+	protected VSubGraph getOutVGraph() {
+		return outVGraph;
+	}
+
 	/**
 	 * Get other vertex of this edge
 	 * @param vertex
 	 * @return other vertex
 	 */
 	public VVertex getOtherVertex(VVertex vertex) {
-		return inV.getId().equalsIgnoreCase(vertex.getId())?outV:inV;
+		return inV.equalsIgnoreCase(vertex.getId())?getOutVertex():getInVertex();
 	}
 	
 }

@@ -17,14 +17,15 @@
 package org.veronica.core.structures;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.veronica.core.storage.VStorageFailureException;
 import org.veronica.core.storage.VStorageSink;
 import org.veronica.core.storage.strategies.VShardStrategy;
 
@@ -37,7 +38,7 @@ import org.veronica.core.storage.strategies.VShardStrategy;
  */
 public class VGlobalGraph {
 	
-	private Map<String, VSubGraph> graphShardHash;
+	private ConcurrentMap<String, VSubGraph> graphShardHash;
 	private VStorageSink sink;
 	private VShardStrategy shardingStrategy;
 	private ScheduledExecutorService backgroundService;
@@ -74,13 +75,13 @@ public class VGlobalGraph {
 	 * @param vertex
 	 * @throws InvalidOperationException
 	 */
-	public void addVertex(VVertex vertex) throws InvalidOperationException {
-		String graphId = shardingStrategy.getGraphId(vertex);
+	public VVertex addVertex(String id, String label) throws InvalidOperationException {
+		String graphId = shardingStrategy.getGraphId(id, label, null);
 		if(!graphShardHash.containsKey(graphId)) {
 			graphShardHash.put(graphId, new VSubGraph(graphId, shardingStrategy.getShardSize()));
 		}
 		try {
-			graphShardHash.get(graphId).addVertex(vertex);
+			return graphShardHash.get(graphId).addVertex(id, label);
 		} catch (ReadOnlyShardException e) {
 			throw new InvalidOperationException(e.getMessage());
 		}
@@ -115,6 +116,11 @@ public class VGlobalGraph {
 	}
 
 	protected VSubGraph warmSubGraph(VSubGraph subGraph) {
+		try {
+			sink.readGraphBlock(subGraph.getGraphId());
+		} catch (VStorageFailureException e) {
+			e.printStackTrace();
+		}
 		return null;
 	}
 

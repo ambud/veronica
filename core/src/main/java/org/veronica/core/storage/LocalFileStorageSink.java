@@ -19,12 +19,17 @@ package org.veronica.core.storage;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.veronica.core.structures.VEdge;
 import org.veronica.core.structures.VElement;
 import org.veronica.core.structures.VSubGraph;
@@ -36,6 +41,7 @@ import org.veronica.core.structures.VVertex;
  */
 public class LocalFileStorageSink extends VStorageSink {
 	
+	private static final Logger logger = LogManager.getLogger(LocalFileStorageSink.class);
 	private static final String CONF_BASE = "lfss";
 	private static final String CONF_STORAGE_DIR = CONF_BASE+".dir";
 	private static final String CONF_STORAGE_SSD = CONF_BASE+".ssd";
@@ -52,9 +58,12 @@ public class LocalFileStorageSink extends VStorageSink {
 	public void init() throws VStorageFailureException {
 		Configuration config = getStorageConfig();
 		// get file storage location
+		logger.info("Checking configured storage directory");
 		storageDirectoryPathString = config.getString(CONF_STORAGE_DIR, "/tmp/veronica");
+		logger.info("Storage configured to:"+storageDirectoryPathString);
 		// get is underlying disk is a Solid State Drive (this will have implications on how the flush sizes are computed)
 		ssd = config.getBoolean(CONF_STORAGE_SSD, false);
+		logger.info("Storage is "+(ssd?"SSD":" not SSD"));
 		storageDirectory = new File(storageDirectoryPathString);
 		
 		// perform validations with the storage
@@ -64,9 +73,11 @@ public class LocalFileStorageSink extends VStorageSink {
 		if(!storageDirectory.isDirectory()) {
 			throw new VStorageFailureException(this.getClass(), "Storage path '"+storageDirectory.getAbsolutePath()+"' is not a directory", new FileNotFoundException());
 		}
+		logger.info("Storage directory exists");
 		if(!storageDirectory.canRead() || !storageDirectory.canWrite()) {
 			throw new VStorageFailureException(this.getClass(), "Need read/write permissions to write to local storage directory:"+storageDirectory.getAbsolutePath());
 		}
+		logger.info("Found correct permissions on storage directory");
 	}
 
 	@Override
@@ -83,8 +94,42 @@ public class LocalFileStorageSink extends VStorageSink {
 	@Override
 	public VSubGraph readGraphBlock(String graphId)
 			throws VStorageFailureException {
-		
-		return null;
+		logger.info("Read requsted for graphid:"+graphId);
+		VSubGraph graph = null;
+		File[] files = storageDirectory.listFiles((dir, name)->name.startsWith(graphId));
+		if(files.length==0) {
+			throw new VStorageFailureException(LocalFileStorageSink.class, "Invalid graphId:"+graphId+" can't read block from disk");
+		}
+		logger.info("Found:"+files.length+" versions of shard for graphid:"+graphId);
+		File latestDataFile = Arrays.asList(files)
+				.stream()
+				.sorted((o1, o2)->Long.compare(o2.lastModified(), o1.lastModified()))
+				.findFirst().get();
+		logger.info("Latest shard for graphid:"+graphId+" is "+latestDataFile.getName());
+		String flushTime = latestDataFile.getName().split("\\.")[0].split("_")[1];
+		DataInputStream stream = null;
+		try {
+			stream = new DataInputStream(new FileInputStream(latestDataFile));
+		} catch (FileNotFoundException e) {
+			throw new VStorageFailureException(LocalFileStorageSink.class, "Graph block file doesn't exist for:"+graphId+" file:"+latestDataFile.getPath(), e);
+		}
+		try{
+			String readGraphId = readGraphId(stream);
+			byte[] bloomBytes = readGraphBloom(stream);
+			List<VVertex> vertices = readVertices(stream);
+			graph = new VSubGraph(readGraphId, vertices.size());
+			graph.reinit(bloomBytes, vertices);
+			graph.getLastFlush().set(Long.parseLong(flushTime));
+		}catch(IOException e) {
+			throw new VStorageFailureException(LocalFileStorageSink.class, "Failure to read graphId:"+graphId+" file:"+latestDataFile.getPath()+" from disk", e);
+		}finally{
+			try {
+				stream.close();
+			} catch (IOException e) {
+				throw new VStorageFailureException(LocalFileStorageSink.class, "Failed to close shard file stream", e);
+			}
+		}
+		return graph;
 	}
 
 	@Override
@@ -92,7 +137,7 @@ public class LocalFileStorageSink extends VStorageSink {
 			throws VStorageFailureException {
 		long time = System.currentTimeMillis();
 		String graphId = graph.getGraphId();
-		File graphShardFile = new File(storageDirectory, graphId+"-"+time+".vr");
+		File graphShardFile = new File(storageDirectory, graphId+"_"+time+".vr");
 		DataOutputStream stream = null;
 		try {
 			stream = new DataOutputStream(new FileOutputStream(graphShardFile));
@@ -100,7 +145,7 @@ public class LocalFileStorageSink extends VStorageSink {
 			throw new VStorageFailureException(LocalFileStorageSink.class, "Storage file not found", e);
 		}
 		try{
-			writeGraphId(graphId, stream);
+			writeElementId(graphId, stream);
 			writeGraphBloom(graph, stream);
 			writeVertices(graph, stream);
 		}catch(IOException e) {
@@ -109,7 +154,7 @@ public class LocalFileStorageSink extends VStorageSink {
 			try {
 				stream.close();
 			} catch (IOException e) {
-				throw new VStorageFailureException(LocalFileStorageSink.class, "Failed to close shard file stream");
+				throw new VStorageFailureException(LocalFileStorageSink.class, "Failed to close shard file stream", e);
 			}
 		}
 		return time;
@@ -125,18 +170,37 @@ public class LocalFileStorageSink extends VStorageSink {
 		}
 	}
 	
-	protected List<VVertex> readVertices(DataInputStream stream) {
-		return null;
+	protected List<VVertex> readVertices(DataInputStream stream) throws IOException {
+		List<VVertex> vertices = new ArrayList<VVertex>();
+		while(stream.available()>0) {
+			String id = readElementId(stream);
+			String label = readElementId(stream);
+			
+		}
+		return vertices;
 	}
 
 	protected void writeVertexEdge(DataOutputStream stream, VVertex vertex)
 			throws IOException {
+		stream.writeInt(vertex.getEdges().size());
 		for (VEdge edge : vertex.getEdges()) {
 			writeElementId(stream, edge);
 			writeElementLabel(stream, edge);
 			String otherVertex = edge.getOtherVertex(vertex).getId();
-			writeGraphId(otherVertex, stream);
+			writeElementId(otherVertex, stream);
 		}
+	}
+	
+	protected List<VEdge> readVertexEdge(DataInputStream stream) throws IOException {
+		int edgeCount = stream.readInt();
+		List<VEdge> edges = new ArrayList<VEdge>(edgeCount);
+		for(int i=0;i<edgeCount;i++) {
+			String edgeId = readElementId(stream);
+			String edgeLabel = readElementLabel(stream);
+			String otherVertexId = readElementId(stream);
+//			VEdge edge = new VEdge();
+		}
+		return edges;
 	}
 
 	protected void writeElementLabel(DataOutputStream stream, VElement element)
@@ -149,7 +213,7 @@ public class LocalFileStorageSink extends VStorageSink {
 		}
 	}
 	
-	protected String readVertexLabel(DataInputStream stream) throws IOException {
+	protected String readElementLabel(DataInputStream stream) throws IOException {
 		int val = stream.readInt();
 		if(val==-1) {
 			return null;
@@ -185,7 +249,7 @@ public class LocalFileStorageSink extends VStorageSink {
 		return bloom;
 	}
 
-	protected void writeGraphId(String graphId, DataOutputStream stream)
+	protected void writeElementId(String graphId, DataOutputStream stream)
 			throws IOException {
 		stream.writeInt(graphId.length());
 		stream.write(graphId.getBytes());

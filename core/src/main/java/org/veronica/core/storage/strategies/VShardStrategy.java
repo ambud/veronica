@@ -27,7 +27,7 @@ public abstract class VShardStrategy extends VStorageStrategy {
 	 * @param vertex
 	 * @return subgraphid
 	 */
-	public abstract String getGraphId(VVertex vertex);
+	public abstract String getGraphId(String id, String label, List<String> adjacentVertices);
 	
 	/**
 	 * From the supplied list of shards, which shards are full and should be marked as readonly
