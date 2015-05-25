@@ -40,8 +40,8 @@ public class TestSimpleLocalFileStoragePerf {
 	
 	@Test
 	public void testHeavyVertexWrite() throws GeneratorException {
-		long time = System.currentTimeMillis();
 		VSubGraph graph = TestGraphGenerator.generateContinuousGraph(100000, true);
+		long time = System.currentTimeMillis();
 		VStorageSink sink = new SimpleLocalFileStorageSink("local-ssd", storageConfig, null);
 		try {
 			sink.init();
@@ -55,8 +55,8 @@ public class TestSimpleLocalFileStoragePerf {
 	
 	@Test
 	public void testHeavyVertexLoad() throws GeneratorException {
-		long time = System.currentTimeMillis();
 		VSubGraph graph = TestGraphGenerator.generateContinuousGraph(100000, true);
+		long time = System.currentTimeMillis();
 		VStorageSink sink = new SimpleLocalFileStorageSink("local-ssd", storageConfig, null);
 		try {
 			sink.init();
