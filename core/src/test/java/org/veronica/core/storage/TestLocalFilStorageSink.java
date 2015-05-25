@@ -80,14 +80,15 @@ public class TestLocalFilStorageSink {
 	
 	@Test
 	public void testSampleRead() throws GeneratorException {
+		int numNodes = 10;
 		VStorageSink sink = new LocalFileStorageSink("local-ssd", storageConfig);
 		try {
-			VSubGraph graph = TestGraphGenerator.generateContinuousGraph(10, true);
+			VSubGraph graphOriginal = TestGraphGenerator.generateContinuousGraph(numNodes, true);
 			sink.init();
-			sink.writeGraphBlock(graph);
-			graph = sink.readGraphBlock(graph.getGraphId());
-			assertNotNull(graph);
-			assertEquals(10, graph.getShardVertices().size());
+			sink.writeGraphBlock(graphOriginal);
+			VSubGraph graphRead = sink.readGraphBlock(graphOriginal.getGraphId());
+			assertNotNull(graphRead);
+			assertEquals(numNodes, graphRead.getShardVertices().size());
 		} catch (VStorageFailureException e) {
 			fail("Storage exception:"+e.getMessage());
 		}

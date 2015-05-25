@@ -17,13 +17,14 @@ package org.veronica.core.configuration;
 
 import java.net.URISyntaxException;
 import java.util.Arrays;
-import java.util.logging.Logger;
 
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Configuration Manager singleton.
@@ -32,7 +33,7 @@ import org.apache.commons.configuration.XMLConfiguration;
  */
 public class ConfigurationManager {
 
-	private static final Logger logger = Logger.getLogger(ConfigurationManager.class.getCanonicalName());
+	private static final Logger logger = LogManager.getLogger(ConfigurationManager.class);
 	public static final String ENV_VERONICA_CONFIG = "VERONICA_CONFIG";
 	private static final String CONFIG_BASE_PREFIX = "org.veronica.";
 	private static final String CONFIG_SECURITY_PREFIX = CONFIG_BASE_PREFIX+"security.";
