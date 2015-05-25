@@ -21,12 +21,18 @@ import org.veronica.core.structures.VGlobalGraph;
 import org.veronica.core.structures.VSubGraph;
 
 /**
- * Define how to physically store graphs in Veronica. 
+ * Defines how to physically store graphs in Veronica. 
  * 
  * The sink will abstract the Veronica Graph Database from:
  * 	- storage specific performance tuning
  *  - storage formats and file structures suited for the format
- *   
+ * 
+ * A sink I/Os graph shards in form of {@link VSubGraph} i.e. multiple shards together form the 
+ * {@link VGlobalGraph} which is the real graph database a user should be interacting with. 
+ * 
+ * The storage sink allows different implementations for different storage media e.g.
+ * Sequential optimized I/O for magnetic drives or random I/O for SSDs to get maximum performance.
+ * 
  * @author ambudsharma
  *
  */

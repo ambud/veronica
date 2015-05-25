@@ -25,9 +25,16 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
+import java.util.zip.InflaterInputStream;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.logging.log4j.LogManager;
@@ -39,6 +46,10 @@ import org.veronica.core.structures.VSubGraph;
 import org.veronica.core.structures.VVertex;
 
 /**
+ * This class is the simplest representation of an adjacency list disk read/write of graph shards.
+ * 
+ * The current implementation is agnostic to SSDs but will perform better on SSDs due to their superior I/O 
+ * capabilities.
  * 
  * @author ambudsharma
  */
@@ -53,6 +64,9 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 	private String storageDirectoryPathString;
 	private File storageDirectory;
 	private boolean ssd;
+	private boolean compress;
+	private Class<? extends DeflaterOutputStream> compressor;
+	private Class<? extends InflaterInputStream> decompressor;
 
 	public SimpleLocalFileStorageSink(String sinkName, Configuration storageConfig, VGlobalGraph graph) {
 		super(sinkName, storageConfig, graph);
@@ -69,6 +83,11 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 		ssd = config.getBoolean(CONF_STORAGE_SSD, false);
 		logger.info("Storage is "+(ssd?"SSD":" not SSD"));
 		storageDirectory = new File(storageDirectoryPathString);
+		compress = config.getBoolean("compress", false);
+		if(compress) {
+			compressor = GZIPOutputStream.class;
+			decompressor = GZIPInputStream.class;
+		}
 		
 		// perform validations with the storage
 		if(!storageDirectory.exists()) {
@@ -112,9 +131,17 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 		String flushTime = latestDataFile.getName().split("\\.")[0].split("_")[1];
 		DataInputStream stream = null;
 		try {
-			stream = new DataInputStream(new BufferedInputStream(new FileInputStream(latestDataFile), BUFFER_SIZE));
+			InputStream baseStream = new FileInputStream(latestDataFile);
+			if(compress) {
+				baseStream = decompressor.getDeclaredConstructor(InputStream.class).newInstance(baseStream);
+			}
+			stream = new DataInputStream(new BufferedInputStream(baseStream, BUFFER_SIZE));
 		} catch (FileNotFoundException e) {
 			throw new VStorageFailureException(SimpleLocalFileStorageSink.class, "Graph block file doesn't exist for:"+graphId+" file:"+latestDataFile.getPath(), e);
+		} catch (InstantiationException | IllegalAccessException
+				| IllegalArgumentException | InvocationTargetException
+				| NoSuchMethodException | SecurityException e) {
+			throw new VStorageFailureException(SimpleLocalFileStorageSink.class, "Failed to initialize pluggable de-compressor", e);
 		}
 		try{
 			String readGraphId = readGraphId(stream);
@@ -165,10 +192,18 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 		File graphShardFile = new File(storageDirectory, graphId+"_"+time+".vr");
 		DataOutputStream stream = null;
 		try {
-			stream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(graphShardFile), BUFFER_SIZE));
+			OutputStream baseStream = new FileOutputStream(graphShardFile);
+			if(compress) {
+				baseStream = (OutputStream)compressor.getDeclaredConstructor(OutputStream.class).newInstance(baseStream);
+			}
+			stream = new DataOutputStream(new BufferedOutputStream(baseStream, BUFFER_SIZE));
 		} catch (FileNotFoundException e) {
 			throw new VStorageFailureException(SimpleLocalFileStorageSink.class, "Storage file not found", e);
-		}
+		} catch (InstantiationException | IllegalAccessException
+				| IllegalArgumentException | InvocationTargetException
+				| NoSuchMethodException | SecurityException e) {
+			throw new VStorageFailureException(SimpleLocalFileStorageSink.class, "Failed to initialize pluggable compressor", e);
+		} 
 		try{
 			writeElementId(graphId, stream);
 			List<VVertex> vertices = graph.getShardVertices();
