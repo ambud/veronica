@@ -27,7 +27,7 @@ public class VStorageFailureException extends VException {
 	}
 
 	public VStorageFailureException(
-			Class<? extends LocalFileStorageSink> from, String message) {
+			Class<? extends SimpleLocalFileStorageSink> from, String message) {
 		super("Storage failure:"+from.getCanonicalName()+":"+message);
 	}
 

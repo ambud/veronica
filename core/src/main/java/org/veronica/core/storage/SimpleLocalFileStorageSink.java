@@ -32,6 +32,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.veronica.core.structures.VEdge;
 import org.veronica.core.structures.VElement;
+import org.veronica.core.structures.VGlobalGraph;
 import org.veronica.core.structures.VSubGraph;
 import org.veronica.core.structures.VVertex;
 
@@ -39,9 +40,9 @@ import org.veronica.core.structures.VVertex;
  * 
  * @author ambudsharma
  */
-public class LocalFileStorageSink extends VStorageSink {
+public class SimpleLocalFileStorageSink extends VStorageSink {
 	
-	private static final Logger logger = LogManager.getLogger(LocalFileStorageSink.class);
+	private static final Logger logger = LogManager.getLogger(SimpleLocalFileStorageSink.class);
 	private static final String CONF_BASE = "lfss";
 	private static final String CONF_STORAGE_DIR = CONF_BASE+".dir";
 	private static final String CONF_STORAGE_SSD = CONF_BASE+".ssd";
@@ -50,8 +51,8 @@ public class LocalFileStorageSink extends VStorageSink {
 	private File storageDirectory;
 	private boolean ssd;
 
-	public LocalFileStorageSink(String sinkName, Configuration storageConfig) {
-		super(sinkName, storageConfig);
+	public SimpleLocalFileStorageSink(String sinkName, Configuration storageConfig, VGlobalGraph graph) {
+		super(sinkName, storageConfig, graph);
 	}
 
 	@Override
@@ -82,13 +83,12 @@ public class LocalFileStorageSink extends VStorageSink {
 
 	@Override
 	public VSubGraph readIndex(String graphId) throws VStorageFailureException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new VStorageFailureException(SimpleLocalFileStorageSink.class, "Unsupported operation read index");
 	}
 
 	@Override
 	public void writeIndex(VSubGraph graphId) throws VStorageFailureException {
-		// TODO Auto-generated method stub
+		throw new VStorageFailureException(SimpleLocalFileStorageSink.class, "Unsupported operation write index");
 	}
 
 	@Override
@@ -98,7 +98,7 @@ public class LocalFileStorageSink extends VStorageSink {
 		VSubGraph graph = null;
 		File[] files = storageDirectory.listFiles((dir, name)->name.startsWith(graphId));
 		if(files.length==0) {
-			throw new VStorageFailureException(LocalFileStorageSink.class, "Invalid graphId:"+graphId+" can't read block from disk");
+			throw new VStorageFailureException(SimpleLocalFileStorageSink.class, "Invalid graphId:"+graphId+" can't read block from disk");
 		}
 		logger.info("Found:"+files.length+" versions of shard for graphid:"+graphId);
 		File latestDataFile = Arrays.asList(files)
@@ -111,25 +111,47 @@ public class LocalFileStorageSink extends VStorageSink {
 		try {
 			stream = new DataInputStream(new FileInputStream(latestDataFile));
 		} catch (FileNotFoundException e) {
-			throw new VStorageFailureException(LocalFileStorageSink.class, "Graph block file doesn't exist for:"+graphId+" file:"+latestDataFile.getPath(), e);
+			throw new VStorageFailureException(SimpleLocalFileStorageSink.class, "Graph block file doesn't exist for:"+graphId+" file:"+latestDataFile.getPath(), e);
 		}
 		try{
 			String readGraphId = readGraphId(stream);
-			byte[] bloomBytes = readGraphBloom(stream);
-			List<VVertex> vertices = readVertices(stream);
-			graph = new VSubGraph(readGraphId, vertices.size());
-			graph.reinit(bloomBytes, vertices);
+			int vertexCount = stream.readInt();
+			byte[] bloomBytes = null;
+			if(getGraph()!=null) {
+				graph = getGraph().getGraphShard(readGraphId);
+				// skip bloom bytes
+				skipBloom(stream);
+			}else{
+				graph = new VSubGraph(readGraphId, vertexCount);
+				bloomBytes = readGraphBloom(stream);
+			}
+			List<VVertex> vertices = readVertices(graph, stream);
+			if(getGraph()!=null) {
+				graph.loadVertices(vertices);
+			}else{
+				graph.reinit(bloomBytes, vertices);
+			}
 			graph.getLastFlush().set(Long.parseLong(flushTime));
 		}catch(IOException e) {
-			throw new VStorageFailureException(LocalFileStorageSink.class, "Failure to read graphId:"+graphId+" file:"+latestDataFile.getPath()+" from disk", e);
+			throw new VStorageFailureException(SimpleLocalFileStorageSink.class, "Failure to read graphId:"+graphId+" file:"+latestDataFile.getPath()+" from disk", e);
 		}finally{
 			try {
 				stream.close();
 			} catch (IOException e) {
-				throw new VStorageFailureException(LocalFileStorageSink.class, "Failed to close shard file stream", e);
+				throw new VStorageFailureException(SimpleLocalFileStorageSink.class, "Failed to close shard file stream", e);
 			}
 		}
 		return graph;
+	}
+
+	/**
+	 * Skip bloom bytes if not needed to re-read bloom filter
+	 * @param stream
+	 * @throws IOException
+	 */
+	protected void skipBloom(DataInputStream stream) throws IOException {
+		int bytesToSkip = stream.readInt();
+		stream.skip(bytesToSkip);
 	}
 
 	@Override
@@ -142,27 +164,28 @@ public class LocalFileStorageSink extends VStorageSink {
 		try {
 			stream = new DataOutputStream(new FileOutputStream(graphShardFile));
 		} catch (FileNotFoundException e) {
-			throw new VStorageFailureException(LocalFileStorageSink.class, "Storage file not found", e);
+			throw new VStorageFailureException(SimpleLocalFileStorageSink.class, "Storage file not found", e);
 		}
 		try{
 			writeElementId(graphId, stream);
+			List<VVertex> vertices = graph.getShardVertices();
+			stream.writeInt(vertices.size());
 			writeGraphBloom(graph, stream);
-			writeVertices(graph, stream);
+			writeVertices(vertices, stream);
 		}catch(IOException e) {
-			e.printStackTrace();
+			throw new VStorageFailureException(SimpleLocalFileStorageSink.class, "Graph block write failed", e);
 		}finally{
 			try {
 				stream.close();
 			} catch (IOException e) {
-				throw new VStorageFailureException(LocalFileStorageSink.class, "Failed to close shard file stream", e);
+				throw new VStorageFailureException(SimpleLocalFileStorageSink.class, "Failed to close shard file stream", e);
 			}
 		}
 		return time;
 	}
 
-	protected void writeVertices(VSubGraph graph, DataOutputStream stream)
+	protected void writeVertices(List<VVertex> vertices, DataOutputStream stream)
 			throws IOException {
-		List<VVertex> vertices = graph.getShardVertices();
 		for (VVertex vertex : vertices) {
 			writeElementId(stream, vertex);
 			writeElementLabel(stream, vertex);
@@ -170,13 +193,13 @@ public class LocalFileStorageSink extends VStorageSink {
 		}
 	}
 	
-	protected List<VVertex> readVertices(DataInputStream stream) throws IOException {
+	protected List<VVertex> readVertices(VSubGraph graph, DataInputStream stream) throws IOException {
 		List<VVertex> vertices = new ArrayList<VVertex>();
 		while(stream.available()>0) {
 			String id = readElementId(stream);
 			String label = readElementId(stream);
-			List<VEdge> edges = readVertexEdge(id, stream);
-			VVertex vertex = new VVertex(null, id, label);
+			List<VEdge> edges = readVertexEdge(graph, id, stream);
+			VVertex vertex = new VVertex(graph, id, label);
 			vertex.getEdges().addAll(edges);
 			vertices.add(vertex);
 		}
@@ -189,20 +212,49 @@ public class LocalFileStorageSink extends VStorageSink {
 		for (VEdge edge : vertex.getEdges()) {
 			writeElementId(stream, edge);
 			writeElementLabel(stream, edge);
-			String otherVertex = edge.getOtherVertex(vertex).getId();
+			String otherVertex = edge.getOtherVertex(vertex.getId());
+			boolean direction = edge.isInV(otherVertex);
+			stream.writeBoolean(direction);
+			boolean sharedShard = edge.getOutVGraph().getGraphId().equals(edge.getGraph().getGraphId());
+			stream.writeBoolean(sharedShard);
+			if(!sharedShard) {
+				if(vertex.getGraph().getGraphId().equals(edge.getGraph().getGraphId())) {
+					writeElementId(edge.getOutVGraph().getGraphId(), stream);
+				}else{
+					writeElementId(edge.getGraph().getGraphId(), stream);
+				}
+			}
 			writeElementId(otherVertex, stream);
 		}
 	}
 	
-	protected List<VEdge> readVertexEdge(String vertexId, DataInputStream stream) throws IOException {
+	protected List<VEdge> readVertexEdge(VSubGraph graph, String vertexId, DataInputStream stream) throws IOException {
 		int edgeCount = stream.readInt();
 		List<VEdge> edges = new ArrayList<VEdge>(edgeCount);
 		for(int i=0;i<edgeCount;i++) {
 			String edgeId = readElementId(stream);
 			String edgeLabel = readElementLabel(stream);
+			boolean direction = stream.readBoolean();
+			boolean sharedShard = stream.readBoolean();
+			VSubGraph graphTwo = null;
+			if(sharedShard) {
+				graphTwo = graph;
+			}else{
+				String graphTwoId = readElementId(stream);
+				if(getGraph()!=null) {
+					graphTwo = getGraph().getGraphShard(graphTwoId);
+				}else{
+					graphTwo = new VSubGraph(graphTwoId, 1);
+				}
+			}
 			String otherVertexId = readElementId(stream);
-			VEdge edge = new VEdge(edgeId, edgeLabel, vertexId, otherVertexId);
-			edges.add(edge);
+			if(direction) {
+				VEdge edge = new VEdge(edgeId, edgeLabel, otherVertexId, graphTwo, vertexId, graph);
+				edges.add(edge);
+			}else{
+				VEdge edge = new VEdge(edgeId, edgeLabel, vertexId, graph, otherVertexId, graphTwo);
+				edges.add(edge);
+			}
 		}
 		return edges;
 	}

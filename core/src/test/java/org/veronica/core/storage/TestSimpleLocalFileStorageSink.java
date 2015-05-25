@@ -34,9 +34,9 @@ import org.veronica.core.structures.GeneratorException;
 import org.veronica.core.structures.TestGraphGenerator;
 import org.veronica.core.structures.VSubGraph;
 
-public class TestLocalFilStorageSink {
+public class TestSimpleLocalFileStorageSink {
 
-	private static final Logger logger = LogManager.getLogger(TestLocalFilStorageSink.class);
+	private static final Logger logger = LogManager.getLogger(TestSimpleLocalFileStorageSink.class);
 	private static final String TARGET_VERONICA_DIRECTORY = "./target/veronica";
 	private static Configuration storageConfig;
 	
@@ -58,7 +58,7 @@ public class TestLocalFilStorageSink {
 	
 	@Test
 	public void testInit() {
-		VStorageSink sink = new LocalFileStorageSink("local-ssd", storageConfig);
+		VStorageSink sink = new SimpleLocalFileStorageSink("local-ssd", storageConfig, null);
 		try {
 			sink.init();
 		} catch (VStorageFailureException e) {
@@ -69,7 +69,7 @@ public class TestLocalFilStorageSink {
 	@Test
 	public void testSampleWrite() throws GeneratorException {
 		VSubGraph graph = TestGraphGenerator.generateContinuousGraph(10, true);
-		VStorageSink sink = new LocalFileStorageSink("local-ssd", storageConfig);
+		VStorageSink sink = new SimpleLocalFileStorageSink("local-ssd", storageConfig, null);
 		try {
 			sink.init();
 			sink.writeGraphBlock(graph);
@@ -81,7 +81,7 @@ public class TestLocalFilStorageSink {
 	@Test
 	public void testSampleRead() throws GeneratorException {
 		int numNodes = 10;
-		VStorageSink sink = new LocalFileStorageSink("local-ssd", storageConfig);
+		VStorageSink sink = new SimpleLocalFileStorageSink("local-ssd", storageConfig, null);
 		try {
 			VSubGraph graphOriginal = TestGraphGenerator.generateContinuousGraph(numNodes, true);
 			sink.init();

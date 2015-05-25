@@ -134,7 +134,7 @@ public class VSubGraph {
 	 * Load all vertices from the list to the hashmap
 	 * @param vertices
 	 */
-	protected void loadVertices(List<VVertex> vertices) {
+	public void loadVertices(List<VVertex> vertices) {
 		vertices.stream().parallel().forEach(vertex->shardVertices.put(vertex.getId(), vertex));
 	}
 	

@@ -123,5 +123,14 @@ public class VGlobalGraph {
 		}
 		return null;
 	}
+	
+	/**
+	 * Lookup graph shard by id
+	 * @param graphId
+	 * @return graph shard object
+	 */
+	public VSubGraph getGraphShard(String graphId) {
+		return graphShardHash.get(graphId);
+	}
 
 }

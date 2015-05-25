@@ -29,11 +29,11 @@ public class VEdge extends VElement {
 		this.outVGraph = outV.getGraph();
 	}
 	
-	public VEdge(String id, String label, String inV, String outV) {
-		super(null, id, label);
+	public VEdge(String id, String label, String inV, VSubGraph inGraph, String outV, VSubGraph outGraph) {
+		super(inGraph, id, label);
 		this.inV = inV;
 		this.outV = outV;
-		this.outVGraph = null;
+		this.outVGraph = outGraph;
 	}
 	
 	/**
@@ -67,10 +67,19 @@ public class VEdge extends VElement {
 	/**
 	 * @return the outVGraph
 	 */
-	protected VSubGraph getOutVGraph() {
+	public VSubGraph getOutVGraph() {
 		return outVGraph;
 	}
 
+	/**
+	 * If the supplied vertex is the inner vertex of this edge
+	 * @param vertex
+	 * @return is inner vertex
+	 */
+	public boolean isInV(String vertexId) {
+		return inV.equalsIgnoreCase(vertexId);
+	}
+	
 	/**
 	 * Get other vertex of this edge
 	 * @param vertex
@@ -79,5 +88,22 @@ public class VEdge extends VElement {
 	public VVertex getOtherVertex(VVertex vertex) {
 		return inV.equalsIgnoreCase(vertex.getId())?getOutVertex():getInVertex();
 	}
+	
+	public String getGraphId(String vertexId) {
+		if(isInV(vertexId)) {
+			return getGraph().getGraphId();
+		}else{
+			return outVGraph.getGraphId();
+		}
+	}
+	
+	/**
+	 * @param vertexId
+	 * @return other vertex
+	 */
+	public String getOtherVertex(String vertexId) {
+		return inV.equalsIgnoreCase(vertexId)?outV:inV;
+	}
+	
 	
 }

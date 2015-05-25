@@ -17,6 +17,7 @@
 package org.veronica.core.storage;
 
 import org.apache.commons.configuration.Configuration;
+import org.veronica.core.structures.VGlobalGraph;
 import org.veronica.core.structures.VSubGraph;
 
 /**
@@ -33,10 +34,12 @@ public abstract class VStorageSink {
 	
 	private String sinkName;
 	private Configuration storageConfig;
+	private VGlobalGraph graph;
 
-	public VStorageSink(String sinkName, Configuration storageConfig) {
+	public VStorageSink(String sinkName, Configuration storageConfig, VGlobalGraph graph) {
 		this.sinkName = sinkName;
 		this.storageConfig = storageConfig;
+		this.graph = graph;
 	}
 	
 	public abstract void init() throws VStorageFailureException;
@@ -61,6 +64,13 @@ public abstract class VStorageSink {
 	 */
 	protected Configuration getStorageConfig() {
 		return storageConfig;
+	}
+
+	/**
+	 * @return the graph
+	 */
+	protected VGlobalGraph getGraph() {
+		return graph;
 	}
 	
 }

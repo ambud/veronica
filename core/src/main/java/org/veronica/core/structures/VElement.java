@@ -124,7 +124,7 @@ public abstract class VElement {
 	/**
 	 * @return the graph
 	 */
-	protected VSubGraph getGraph() {
+	public VSubGraph getGraph() {
 		return graph;
 	}
 
