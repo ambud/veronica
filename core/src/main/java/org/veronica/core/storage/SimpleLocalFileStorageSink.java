@@ -16,6 +16,8 @@
  */
 package org.veronica.core.storage;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -46,6 +48,7 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 	private static final String CONF_BASE = "lfss";
 	private static final String CONF_STORAGE_DIR = CONF_BASE+".dir";
 	private static final String CONF_STORAGE_SSD = CONF_BASE+".ssd";
+	private static final int BUFFER_SIZE = 1024*1024;
 	
 	private String storageDirectoryPathString;
 	private File storageDirectory;
@@ -109,7 +112,7 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 		String flushTime = latestDataFile.getName().split("\\.")[0].split("_")[1];
 		DataInputStream stream = null;
 		try {
-			stream = new DataInputStream(new FileInputStream(latestDataFile));
+			stream = new DataInputStream(new BufferedInputStream(new FileInputStream(latestDataFile), BUFFER_SIZE));
 		} catch (FileNotFoundException e) {
 			throw new VStorageFailureException(SimpleLocalFileStorageSink.class, "Graph block file doesn't exist for:"+graphId+" file:"+latestDataFile.getPath(), e);
 		}
@@ -162,7 +165,7 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 		File graphShardFile = new File(storageDirectory, graphId+"_"+time+".vr");
 		DataOutputStream stream = null;
 		try {
-			stream = new DataOutputStream(new FileOutputStream(graphShardFile));
+			stream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(graphShardFile), BUFFER_SIZE));
 		} catch (FileNotFoundException e) {
 			throw new VStorageFailureException(SimpleLocalFileStorageSink.class, "Storage file not found", e);
 		}
