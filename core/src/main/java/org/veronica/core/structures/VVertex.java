@@ -19,8 +19,6 @@ package org.veronica.core.structures;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.veronica.core.memorygraph.VSubGraph;
-
 public class VVertex extends VElement {
 	
 	private List<VEdge> edges;

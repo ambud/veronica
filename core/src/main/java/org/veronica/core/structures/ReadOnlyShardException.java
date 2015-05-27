@@ -16,13 +16,13 @@
  */
 package org.veronica.core.structures;
 
-import org.veronica.core.VException;
 
 public class ReadOnlyShardException extends InvalidOperationException {
 
+	private static final long serialVersionUID = 8506352361787933579L;
+
 	public ReadOnlyShardException(String message) {
 		super(message);
-		// TODO Auto-generated constructor stub
 	}
 
 }

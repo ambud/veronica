@@ -20,6 +20,8 @@ import org.veronica.core.VException;
 
 public class InvalidOperationException extends VException {
 
+	private static final long serialVersionUID = -1354499227157635722L;
+
 	public InvalidOperationException(String message) {
 		super(message);
 	}
