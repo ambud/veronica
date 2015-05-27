@@ -131,11 +131,11 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 		String flushTime = latestDataFile.getName().split("\\.")[0].split("_")[1];
 		DataInputStream stream = null;
 		try {
-			InputStream baseStream = new FileInputStream(latestDataFile);
+			InputStream baseStream = new BufferedInputStream(new FileInputStream(latestDataFile), BUFFER_SIZE);
 			if(compress) {
 				baseStream = decompressor.getDeclaredConstructor(InputStream.class).newInstance(baseStream);
 			}
-			stream = new DataInputStream(new BufferedInputStream(baseStream, BUFFER_SIZE));
+			stream = new DataInputStream(baseStream);
 		} catch (FileNotFoundException e) {
 			throw new VStorageFailureException(SimpleLocalFileStorageSink.class, "Graph block file doesn't exist for:"+graphId+" file:"+latestDataFile.getPath(), e);
 		} catch (InstantiationException | IllegalAccessException
@@ -192,11 +192,11 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 		File graphShardFile = new File(storageDirectory, graphId+"_"+time+".vr");
 		DataOutputStream stream = null;
 		try {
-			OutputStream baseStream = new FileOutputStream(graphShardFile);
+			OutputStream baseStream = new BufferedOutputStream(new FileOutputStream(graphShardFile), BUFFER_SIZE);
 			if(compress) {
 				baseStream = (OutputStream)compressor.getDeclaredConstructor(OutputStream.class).newInstance(baseStream);
 			}
-			stream = new DataOutputStream(new BufferedOutputStream(baseStream, BUFFER_SIZE));
+			stream = new DataOutputStream(baseStream);
 		} catch (FileNotFoundException e) {
 			throw new VStorageFailureException(SimpleLocalFileStorageSink.class, "Storage file not found", e);
 		} catch (InstantiationException | IllegalAccessException
