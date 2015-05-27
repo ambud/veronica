@@ -25,7 +25,7 @@ public class VVertex extends VElement {
 	
 	private List<VEdge> edges;
 
-	public VVertex(VSubGraph graph, String id, String label) {
+	public VVertex(VGraphShard graph, String id, String label) {
 		super(graph, id, label);
 		edges = new ArrayList<VEdge>();
 	}
@@ -40,11 +40,11 @@ public class VVertex extends VElement {
 	 */
 	public void addEdge(VVertex vertex, String label, boolean isInV) {
 		if(isInV) {
-			VEdge edge = new VEdge(null, label, this.getId(), this.getGraph(), vertex.getId(), vertex.getGraph());
+			VEdge edge = new VEdge(null, label, this.getId(), this.getGraphShard(), vertex.getId(), vertex.getGraphShard());
 			this.edges.add(edge);
 			vertex.edges.add(edge);
 		}else{
-			VEdge edge = new VEdge(null, label, vertex.getId(), vertex.getGraph(), this.getId(), this.getGraph());
+			VEdge edge = new VEdge(null, label, vertex.getId(), vertex.getGraphShard(), this.getId(), this.getGraphShard());
 			this.edges.add(edge);
 			vertex.edges.add(edge);
 		}

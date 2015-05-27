@@ -38,9 +38,9 @@ public abstract class VElement {
 	private String key;
 	private String id;
 	private String label;
-	private VSubGraph graph;
+	private VGraphShard graph;
 	
-	public VElement(VSubGraph graph, String id, String label) {
+	public VElement(VGraphShard graph, String id, String label) {
 		this.graph = graph;
 		this.id = id;
 		this.label = label;
@@ -125,7 +125,7 @@ public abstract class VElement {
 	/**
 	 * @return the graph
 	 */
-	public VSubGraph getGraph() {
+	public VGraphShard getGraphShard() {
 		return graph;
 	}
 

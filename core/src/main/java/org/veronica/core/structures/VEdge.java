@@ -16,15 +16,14 @@
  */
 package org.veronica.core.structures;
 
-import org.veronica.core.memorygraph.VSubGraph;
 
 public class VEdge extends VElement {
 	
-	private VSubGraph outVGraph;
+	private VGraphShard outVGraph;
 	private String inV;
 	private String outV;
 	
-	public VEdge(String id, String label, String inV, VSubGraph inGraph, String outV, VSubGraph outGraph) {
+	public VEdge(String id, String label, String inV, VGraphShard inGraph, String outV, VGraphShard outGraph) {
 		super(inGraph, id, label);
 		this.inV = inV;
 		this.outV = outV;
@@ -35,14 +34,14 @@ public class VEdge extends VElement {
 	 * @return the inV
 	 */
 	public VVertex getInVertex() {
-		return getGraph().getVertex(inV);
+		return getGraphShard().getVertex(inV);
 	}
 
 	/**
 	 * @return the outV
 	 */
 	public VVertex getOutVertex() {
-		return getGraph().getVertex(outV);
+		return getGraphShard().getVertex(outV);
 	}
 	
 	/**
@@ -62,7 +61,7 @@ public class VEdge extends VElement {
 	/**
 	 * @return the outVGraph
 	 */
-	public VSubGraph getOutVGraph() {
+	public VGraphShard getOutVGraph() {
 		return outVGraph;
 	}
 
@@ -86,9 +85,9 @@ public class VEdge extends VElement {
 	
 	public String getGraphId(String vertexId) {
 		if(isInV(vertexId)) {
-			return getGraph().getGraphId();
+			return getGraphShard().getShardId();
 		}else{
-			return outVGraph.getGraphId();
+			return outVGraph.getShardId();
 		}
 	}
 	

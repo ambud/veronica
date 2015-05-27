@@ -253,13 +253,13 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 			String otherVertex = edge.getOtherVertex(vertex.getId());
 			boolean direction = edge.isInV(otherVertex);
 			stream.writeBoolean(direction);
-			boolean sharedShard = edge.getOutVGraph().getGraphId().equals(edge.getGraph().getGraphId());
+			boolean sharedShard = edge.getOutVGraph().getShardId().equals(edge.getGraphShard().getShardId());
 			stream.writeBoolean(sharedShard);
 			if(!sharedShard) {
-				if(vertex.getGraph().getGraphId().equals(edge.getGraph().getGraphId())) {
-					writeElementId(edge.getOutVGraph().getGraphId(), stream);
+				if(vertex.getGraphShard().getShardId().equals(edge.getGraphShard().getShardId())) {
+					writeElementId(edge.getOutVGraph().getShardId(), stream);
 				}else{
-					writeElementId(edge.getGraph().getGraphId(), stream);
+					writeElementId(edge.getGraphShard().getShardId(), stream);
 				}
 			}
 			writeElementId(otherVertex, stream);
