@@ -34,7 +34,6 @@ import org.veronica.core.memorygraph.VSubGraph;
 import org.veronica.core.memorygraph.storage.SimpleLocalFileStorageSink;
 import org.veronica.core.memorygraph.storage.VStorageFailureException;
 import org.veronica.core.memorygraph.storage.VStorageSink;
-import org.veronica.core.structures.GeneratorException;
 import org.veronica.core.structures.TestGraphGenerator;
 
 public class TestSimpleLocalFileStorageSink {

@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 import org.veronica.core.memorygraph.VSubGraph;
+import org.veronica.core.memorygraph.storage.GeneratorException;
 import org.veronica.core.structures.ShardInitializationException;
 import org.veronica.core.structures.VVertex;
 
