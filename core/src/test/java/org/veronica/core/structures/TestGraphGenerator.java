@@ -70,6 +70,9 @@ public class TestGraphGenerator {
 				}else{
 					vertex = graph.addVertex(String.valueOf(nodeNumber), null);
 				}
+				if(vertex==null) {
+					throw new Exception("Returned vertex is null");
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 				errorCount.incrementAndGet();
