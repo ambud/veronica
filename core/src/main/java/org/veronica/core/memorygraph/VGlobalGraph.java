@@ -27,7 +27,7 @@ import java.util.stream.Stream;
 
 import org.veronica.core.memorygraph.storage.VStorageFailureException;
 import org.veronica.core.memorygraph.storage.VStorageSink;
-import org.veronica.core.storage.strategies.VShardStrategy;
+import org.veronica.core.memorygraph.storage.strategies.VShardStrategy;
 import org.veronica.core.structures.InvalidOperationException;
 import org.veronica.core.structures.ReadOnlyShardException;
 import org.veronica.core.structures.ShardInitializationException;
