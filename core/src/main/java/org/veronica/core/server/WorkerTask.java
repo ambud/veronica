@@ -19,7 +19,6 @@ package org.veronica.core.server;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
-import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
 public class WorkerTask implements Runnable {

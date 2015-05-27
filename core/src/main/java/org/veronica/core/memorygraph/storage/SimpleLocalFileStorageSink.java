@@ -31,11 +31,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.zip.DeflaterOutputStream;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
-import java.util.zip.InflaterInputStream;
 
+import org.apache.commons.compress.compressors.CompressorInputStream;
+import org.apache.commons.compress.compressors.CompressorOutputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.apache.commons.configuration.Configuration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -65,8 +65,8 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 	private File storageDirectory;
 	private boolean ssd;
 	private boolean compress;
-	private Class<? extends DeflaterOutputStream> compressor;
-	private Class<? extends InflaterInputStream> decompressor;
+	private Class<? extends CompressorOutputStream> compressor;
+	private Class<? extends CompressorInputStream> decompressor;
 
 	public SimpleLocalFileStorageSink(String sinkName, Configuration storageConfig, VGlobalGraph graph) {
 		super(sinkName, storageConfig, graph);
@@ -83,10 +83,10 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 		ssd = config.getBoolean(CONF_STORAGE_SSD, false);
 		logger.info("Storage is "+(ssd?"SSD":" not SSD"));
 		storageDirectory = new File(storageDirectoryPathString);
-		compress = config.getBoolean("compress", false);
+		compress = config.getBoolean("compress", true);
 		if(compress) {
-			compressor = GZIPOutputStream.class;
-			decompressor = GZIPInputStream.class;
+			compressor = GzipCompressorOutputStream.class;
+			decompressor = GzipCompressorInputStream.class;
 		}
 		
 		// perform validations with the storage
@@ -113,6 +113,7 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 		throw new VStorageFailureException(SimpleLocalFileStorageSink.class, "Unsupported operation write index");
 	}
 
+	@SuppressWarnings("resource")
 	@Override
 	public VSubGraph readGraphBlock(String graphId)
 			throws VStorageFailureException {
@@ -130,8 +131,9 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 		logger.info("Latest shard for graphid:"+graphId+" is "+latestDataFile.getName());
 		String flushTime = latestDataFile.getName().split("\\.")[0].split("_")[1];
 		DataInputStream stream = null;
+		InputStream baseStream = null;
 		try {
-			InputStream baseStream = new BufferedInputStream(new FileInputStream(latestDataFile), BUFFER_SIZE);
+			baseStream = new BufferedInputStream(new FileInputStream(latestDataFile), BUFFER_SIZE);
 			if(compress) {
 				baseStream = decompressor.getDeclaredConstructor(InputStream.class).newInstance(baseStream);
 			}
@@ -167,6 +169,7 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 		}finally{
 			try {
 				stream.close();
+				baseStream.close();
 			} catch (IOException e) {
 				throw new VStorageFailureException(SimpleLocalFileStorageSink.class, "Failed to close shard file stream", e);
 			}
@@ -184,6 +187,7 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 		stream.skip(bytesToSkip);
 	}
 
+	@SuppressWarnings("resource")
 	@Override
 	public long writeGraphBlock(VSubGraph graph)
 			throws VStorageFailureException {
@@ -191,8 +195,9 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 		String graphId = graph.getGraphId();
 		File graphShardFile = new File(storageDirectory, graphId+"_"+time+".vr");
 		DataOutputStream stream = null;
+		OutputStream baseStream = null;
 		try {
-			OutputStream baseStream = new BufferedOutputStream(new FileOutputStream(graphShardFile), BUFFER_SIZE);
+			baseStream = new BufferedOutputStream(new FileOutputStream(graphShardFile), BUFFER_SIZE);
 			if(compress) {
 				baseStream = (OutputStream)compressor.getDeclaredConstructor(OutputStream.class).newInstance(baseStream);
 			}
@@ -215,6 +220,7 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 		}finally{
 			try {
 				stream.close();
+				baseStream.close();
 			} catch (IOException e) {
 				throw new VStorageFailureException(SimpleLocalFileStorageSink.class, "Failed to close shard file stream", e);
 			}
