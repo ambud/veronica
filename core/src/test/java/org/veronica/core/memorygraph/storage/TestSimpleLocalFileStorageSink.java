@@ -14,9 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.2
  */
-package org.veronica.core.storage;
+package org.veronica.core.memorygraph.storage;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,17 +30,16 @@ import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.veronica.core.memorygraph.VSubGraph;
+import org.veronica.core.memorygraph.storage.SimpleLocalFileStorageSink;
+import org.veronica.core.memorygraph.storage.VStorageFailureException;
+import org.veronica.core.memorygraph.storage.VStorageSink;
 import org.veronica.core.structures.GeneratorException;
 import org.veronica.core.structures.TestGraphGenerator;
-import org.veronica.core.structures.VSubGraph;
 
-/**
- * @author ambudsharma
- *
- */
-public class TestSimpleLocalFileStoragePerf {
+public class TestSimpleLocalFileStorageSink {
 
-	private static final Logger logger = LogManager.getLogger(TestSimpleLocalFileStoragePerf.class);
+	private static final Logger logger = LogManager.getLogger(TestSimpleLocalFileStorageSink.class);
 	private static final String TARGET_VERONICA_DIRECTORY = "./target/veronica";
 	private static Configuration storageConfig;
 	
@@ -59,9 +60,18 @@ public class TestSimpleLocalFileStoragePerf {
 	}
 	
 	@Test
-	public void testHeavyVertexWrite() throws GeneratorException {
-		VSubGraph graph = TestGraphGenerator.generateContinuousGraph(100000, true);
-		long time = System.currentTimeMillis();
+	public void testInit() {
+		VStorageSink sink = new SimpleLocalFileStorageSink("local-ssd", storageConfig, null);
+		try {
+			sink.init();
+		} catch (VStorageFailureException e) {
+			fail("Failed to initialize local storage:"+e.getMessage());
+		}
+	}
+	
+	@Test
+	public void testSampleWrite() throws GeneratorException {
+		VSubGraph graph = TestGraphGenerator.generateContinuousGraph(10, true);
 		VStorageSink sink = new SimpleLocalFileStorageSink("local-ssd", storageConfig, null);
 		try {
 			sink.init();
@@ -69,28 +79,22 @@ public class TestSimpleLocalFileStoragePerf {
 		} catch (VStorageFailureException e) {
 			fail("Storage exception:"+e.getMessage());
 		}
-		time = System.currentTimeMillis() - time;
-		logger.warn("Perf time to write graph of 100K :"+time+"ms");
 	}
 	
 	@Test
-	public void testHeavyVertexLoad() throws GeneratorException {
-		VSubGraph graph = TestGraphGenerator.generateContinuousGraph(100000, true);
-		long time = System.currentTimeMillis();
+	public void testSampleRead() throws GeneratorException {
+		int numNodes = 10;
 		VStorageSink sink = new SimpleLocalFileStorageSink("local-ssd", storageConfig, null);
 		try {
+			VSubGraph graphOriginal = TestGraphGenerator.generateContinuousGraph(numNodes, true);
 			sink.init();
-			long ts = sink.writeGraphBlock(graph);
-			long bytes = new File(TARGET_VERONICA_DIRECTORY+"/"+graph.getGraphId()+"_"+ts+".vr").length();
-			logger.info("Written file:"+((double)bytes)/(1024*1024)+" MB");
-			VSubGraph graphBlock = sink.readGraphBlock(graph.getGraphId());
-			assertNotNull(graphBlock);
+			sink.writeGraphBlock(graphOriginal);
+			VSubGraph graphRead = sink.readGraphBlock(graphOriginal.getGraphId());
+			assertNotNull(graphRead);
+			assertEquals(numNodes, graphRead.getShardVertices().size());
 		} catch (VStorageFailureException e) {
-			e.printStackTrace();
 			fail("Storage exception:"+e.getMessage());
 		}
-		time = System.currentTimeMillis() - time;
-		logger.warn("Perf time to read/write graph of 100K :"+time+"ms");
 	}
 	
 }

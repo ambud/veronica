@@ -16,6 +16,31 @@
  */
 package org.veronica.core.structures;
 
-public class GeneratorException extends Exception {
+import org.veronica.core.VException;
+
+public class GeneratorException extends VException {
+
+	private static final long serialVersionUID = 1L;
+
+	public GeneratorException() {
+		super();
+	}
+
+	public GeneratorException(String message, Throwable cause,
+			boolean enableSuppression, boolean writableStackTrace) {
+		super(message, cause, enableSuppression, writableStackTrace);
+	}
+
+	public GeneratorException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
+	public GeneratorException(String message) {
+		super(message);
+	}
+
+	public GeneratorException(Throwable cause) {
+		super(cause);
+	}
 
 }

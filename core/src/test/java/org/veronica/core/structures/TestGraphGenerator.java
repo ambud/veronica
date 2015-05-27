@@ -27,6 +27,10 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
+import org.veronica.core.memorygraph.VSubGraph;
+import org.veronica.core.structures.ShardInitializationException;
+import org.veronica.core.structures.VVertex;
+
 public class TestGraphGenerator {
 	
 	private TestGraphGenerator() {
@@ -51,6 +55,11 @@ public class TestGraphGenerator {
 	
 	public static VSubGraph generateContinuousGraph(int numNodes, boolean randomLabel) throws GeneratorException {
 		VSubGraph graph = new VSubGraph(UUID.randomUUID().toString(), numNodes);
+		try {
+			graph.init();
+		} catch (ShardInitializationException e) {
+			throw new GeneratorException(e);
+		}
 		AtomicInteger errorCount = new AtomicInteger(0);
 		IntStream.range(0, numNodes).forEachOrdered(nodeNumber->{
 			VVertex vertex = null;
@@ -61,6 +70,7 @@ public class TestGraphGenerator {
 					vertex = graph.addVertex(String.valueOf(nodeNumber), null);
 				}
 			} catch (Exception e) {
+				e.printStackTrace();
 				errorCount.incrementAndGet();
 			}
 		});
