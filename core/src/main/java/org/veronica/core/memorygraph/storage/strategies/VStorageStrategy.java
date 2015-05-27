@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.2
  */
-package org.veronica.core.storage.strategies;
+package org.veronica.core.memorygraph.storage.strategies;
 
 import org.apache.commons.configuration.Configuration;
 
