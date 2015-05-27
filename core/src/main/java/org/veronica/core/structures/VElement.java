@@ -24,6 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.configuration.ConfigurationException;
 import org.veronica.core.configuration.ConfigurationManager;
+import org.veronica.core.memorygraph.VSubGraph;
 
 
 /**

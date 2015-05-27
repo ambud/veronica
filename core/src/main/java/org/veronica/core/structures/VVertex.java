@@ -19,6 +19,8 @@ package org.veronica.core.structures;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.veronica.core.memorygraph.VSubGraph;
+
 public class VVertex extends VElement {
 	
 	private List<VEdge> edges;
@@ -38,11 +40,11 @@ public class VVertex extends VElement {
 	 */
 	public void addEdge(VVertex vertex, String label, boolean isInV) {
 		if(isInV) {
-			VEdge edge = new VEdge(null, label, vertex, this);
+			VEdge edge = new VEdge(null, label, this.getId(), this.getGraph(), vertex.getId(), vertex.getGraph());
 			this.edges.add(edge);
 			vertex.edges.add(edge);
 		}else{
-			VEdge edge = new VEdge(null, label, this, vertex);
+			VEdge edge = new VEdge(null, label, vertex.getId(), vertex.getGraph(), this.getId(), this.getGraph());
 			this.edges.add(edge);
 			vertex.edges.add(edge);
 		}

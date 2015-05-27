@@ -14,11 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.2
  */
-package org.veronica.core.storage;
+package org.veronica.core.memorygraph.storage;
 
 import org.apache.commons.configuration.Configuration;
-import org.veronica.core.structures.VGlobalGraph;
-import org.veronica.core.structures.VSubGraph;
+import org.veronica.core.memorygraph.VGlobalGraph;
+import org.veronica.core.memorygraph.VSubGraph;
 
 /**
  * Defines how to physically store graphs in Veronica. 

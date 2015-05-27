@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.2
  */
-package org.veronica.core.structures;
+package org.veronica.core.memorygraph;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,9 +25,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.veronica.core.storage.VStorageFailureException;
-import org.veronica.core.storage.VStorageSink;
+import org.veronica.core.memorygraph.storage.VStorageFailureException;
+import org.veronica.core.memorygraph.storage.VStorageSink;
 import org.veronica.core.storage.strategies.VShardStrategy;
+import org.veronica.core.structures.InvalidOperationException;
+import org.veronica.core.structures.ReadOnlyShardException;
+import org.veronica.core.structures.ShardInitializationException;
+import org.veronica.core.structures.VGraphInterface;
+import org.veronica.core.structures.VVertex;
 
 /**
  * The actual graph database implementation of Veronica. The global graph is built from one or more {@link VSubGraph}
@@ -36,7 +41,7 @@ import org.veronica.core.storage.strategies.VShardStrategy;
  * @author ambudsharma
  *
  */
-public class VGlobalGraph {
+public class VGlobalGraph implements VGraphInterface {
 	
 	private ConcurrentMap<String, VSubGraph> graphShardHash;
 	private VStorageSink sink;
@@ -74,11 +79,14 @@ public class VGlobalGraph {
 	/**
 	 * @param vertex
 	 * @throws InvalidOperationException
+	 * @throws ShardInitializationException 
 	 */
-	public VVertex addVertex(String id, String label) throws InvalidOperationException {
+	public VVertex addVertex(String id, String label) throws InvalidOperationException, ShardInitializationException {
 		String graphId = shardingStrategy.getGraphId(id, label, null);
 		if(!graphShardHash.containsKey(graphId)) {
-			graphShardHash.put(graphId, new VSubGraph(graphId, shardingStrategy.getShardSize()));
+			VSubGraph subGraph = new VSubGraph(graphId, shardingStrategy.getShardSize());
+			subGraph.init();
+			graphShardHash.put(graphId, subGraph);
 		}
 		try {
 			return graphShardHash.get(graphId).addVertex(id, label);
@@ -95,7 +103,7 @@ public class VGlobalGraph {
 	public VVertex getVertex(String vertexId) {
 		List<VSubGraph> subGraphs = graphShardHash.values()
 		.stream().parallel()
-		.filter(subGraph->subGraph.vertexExist(vertexId))
+		.filter(subGraph->subGraph.vertexExists(vertexId))
 		.collect(Collectors.toList());
 		if(subGraphs.size()>0) {
 			Stream<VVertex> val = subGraphs.parallelStream().filter(subGraph->!subGraph.isCached()).map(subGraph->subGraph.getVertex(vertexId)).filter(vertex->vertex!=null);
@@ -131,6 +139,16 @@ public class VGlobalGraph {
 	 */
 	public VSubGraph getGraphShard(String graphId) {
 		return graphShardHash.get(graphId);
+	}
+
+	@Override
+	public VVertex removeVertex(String id) throws InvalidOperationException {
+		throw new InvalidOperationException("Global graph implementation does not currently support removing vertices");
+	}
+
+	@Override
+	public void removeVertex(VVertex vertex) throws InvalidOperationException {
+		throw new InvalidOperationException("Global graph implementation does not currently support removing vertices");
 	}
 
 }

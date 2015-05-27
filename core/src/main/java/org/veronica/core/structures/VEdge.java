@@ -16,18 +16,13 @@
  */
 package org.veronica.core.structures;
 
+import org.veronica.core.memorygraph.VSubGraph;
+
 public class VEdge extends VElement {
 	
 	private VSubGraph outVGraph;
 	private String inV;
 	private String outV;
-	
-	public VEdge(String id, String label, VVertex inV, VVertex outV) {
-		super(inV.getGraph(), id, label);
-		this.inV = inV.getId();
-		this.outV = outV.getId();
-		this.outVGraph = outV.getGraph();
-	}
 	
 	public VEdge(String id, String label, String inV, VSubGraph inGraph, String outV, VSubGraph outGraph) {
 		super(inGraph, id, label);

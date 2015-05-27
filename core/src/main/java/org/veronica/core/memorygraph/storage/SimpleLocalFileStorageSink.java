@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.2
  */
-package org.veronica.core.storage;
+package org.veronica.core.memorygraph.storage;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -39,10 +39,10 @@ import java.util.zip.InflaterInputStream;
 import org.apache.commons.configuration.Configuration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.veronica.core.memorygraph.VGlobalGraph;
+import org.veronica.core.memorygraph.VSubGraph;
 import org.veronica.core.structures.VEdge;
 import org.veronica.core.structures.VElement;
-import org.veronica.core.structures.VGlobalGraph;
-import org.veronica.core.structures.VSubGraph;
 import org.veronica.core.structures.VVertex;
 
 /**

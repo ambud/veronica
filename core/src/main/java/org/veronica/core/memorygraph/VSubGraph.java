@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.2
  */
-package org.veronica.core.structures;
+package org.veronica.core.memorygraph;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -24,8 +24,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
+
+import org.veronica.core.structures.ReadOnlyShardException;
+import org.veronica.core.structures.ShardInitializationException;
+import org.veronica.core.structures.VGraphShard;
+import org.veronica.core.structures.VVertex;
 
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
@@ -42,42 +45,33 @@ import com.google.common.hash.Funnels;
  * @author ambudsharma
  *
  */
-public class VSubGraph {
+public class VSubGraph extends VGraphShard {
 
-	private String graphId;
 	private ConcurrentMap<String, VVertex> shardVertices;
 	// bloom filter for the vertices in this subgraph
 	private BloomFilter<CharSequence> subGraphBloom;
-	private AtomicBoolean readOnly = new AtomicBoolean(true);
-	private AtomicLong lastFlush = new AtomicLong(-1);
 	
 	public VSubGraph(String graphId, int shardSize) {
-		this.graphId = graphId;
+		super(graphId, shardSize);
 		shardVertices = new ConcurrentHashMap<String, VVertex>();
 		subGraphBloom = BloomFilter.create(Funnels.stringFunnel(Charset.defaultCharset()), shardSize, 0.0001);
-		readOnly.set(false);
+		isReadOnly().set(false);
+	}
+
+	@Override
+	public void init() throws ShardInitializationException {
 	}
 	
-	/**
-	 * Add vertex with id and label information only
-	 * @param id
-	 * @param label
-	 * @return vertex
-	 * @throws ReadOnlyShardException 
-	 */
-	protected VVertex addVertex(String id, String label) throws ReadOnlyShardException {
+	@Override
+	public VVertex addVertex(String id, String label) throws ReadOnlyShardException {
 		VVertex vertex = new VVertex(this, id, label);
 		addVertex(vertex);
 		return vertex;
 	}
 	
-	/**
-	 * Add a vertex to this shard
-	 * @param vertex
-	 * @throws ReadOnlyShardException
-	 */
-	private void addVertex(VVertex vertex) throws ReadOnlyShardException {
-		if(readOnly.get()) {
+	@Override
+	protected void addVertex(VVertex vertex) throws ReadOnlyShardException {
+		if(isReadOnly().get()) {
 			throw new ReadOnlyShardException("This subgraph is readonly");
 		}
 		synchronized(subGraphBloom) {
@@ -91,7 +85,7 @@ public class VSubGraph {
 	 * @param vertexId
 	 * @return vertexId
 	 */
-	protected VVertex getVertex(String vertexId) {
+	public VVertex getVertex(String vertexId) {
 		return shardVertices.get(vertexId);
 	}
 
@@ -99,7 +93,7 @@ public class VSubGraph {
 	 * @return the graphId
 	 */
 	public String getGraphId() {
-		return graphId;
+		return getShardId();
 	}
 
 	/**
@@ -114,7 +108,8 @@ public class VSubGraph {
 	 * @param vertexId
 	 * @return if vertex might be present in this subgraph
 	 */
-	public boolean vertexExist(String vertexId) {
+	@Override
+	public boolean vertexExists(String vertexId) {
 		return subGraphBloom.mightContain(vertexId);
 	}
 	
@@ -127,7 +122,7 @@ public class VSubGraph {
 	public void reinit(byte[] bloomBytes, List<VVertex> vertices) throws IOException {
 		loadBloom(bloomBytes);
 		loadVertices(vertices);
-		readOnly.set(false);
+		isReadOnly().set(false);
 	}
 	
 	/**
@@ -173,20 +168,6 @@ public class VSubGraph {
 	 */
 	public void clearShard() {
 		shardVertices.clear();
-	}
-
-	/**
-	 * @return the lastFlush timestamp
-	 */
-	public AtomicLong getLastFlush() {
-		return lastFlush;
-	}
-
-	/**
-	 * @return the readOnly
-	 */
-	protected AtomicBoolean isReadOnly() {
-		return readOnly;
 	}
 	
 }
