@@ -73,12 +73,12 @@ public class TestSimpleLocalFileStoragePerf {
 			fail("Storage exception:"+e.getMessage());
 		}
 		time = System.currentTimeMillis() - time;
-		logger.warn("Perf time to write graph of 100K :"+time+"ms");
+		logger.warn("Perf time to write graph of "+PERF_VERTEX_COUNT+" :"+time+"ms");
 	}
 	
 	@Test
 	public void testHeavyVertexLoad() throws GeneratorException {
-		VSubGraph graph = TestGraphGenerator.generateContinuousGraph(100000, true);
+		VSubGraph graph = TestGraphGenerator.generateContinuousGraph(PERF_VERTEX_COUNT, true);
 		long time = System.currentTimeMillis();
 		VStorageSink sink = new SimpleLocalFileStorageSink("local-ssd", storageConfig, null);
 		try {
@@ -93,7 +93,7 @@ public class TestSimpleLocalFileStoragePerf {
 			fail("Storage exception:"+e.getMessage());
 		}
 		time = System.currentTimeMillis() - time;
-		logger.warn("Perf time to read/write graph of 100K :"+time+"ms");
+		logger.warn("Perf time to read/write graph of "+PERF_VERTEX_COUNT+" :"+time+"ms");
 	}
 	
 }
