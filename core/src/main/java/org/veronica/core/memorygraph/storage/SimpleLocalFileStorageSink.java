@@ -83,7 +83,7 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 		ssd = config.getBoolean(CONF_STORAGE_SSD, false);
 		logger.info("Storage is "+(ssd?"SSD":" not SSD"));
 		storageDirectory = new File(storageDirectoryPathString);
-		compress = config.getBoolean("compress", true);
+		compress = config.getBoolean("compress", false);
 		if(compress) {
 			compressor = GzipCompressorOutputStream.class;
 			decompressor = GzipCompressorInputStream.class;

@@ -40,6 +40,7 @@ import org.veronica.core.structures.TestGraphGenerator;
  */
 public class TestSimpleLocalFileStoragePerf {
 
+	private static final int PERF_VERTEX_COUNT = 100000;
 	private static final Logger logger = LogManager.getLogger(TestSimpleLocalFileStoragePerf.class);
 	private static final String TARGET_VERONICA_DIRECTORY = "./target/veronica";
 	private static Configuration storageConfig;
@@ -62,7 +63,7 @@ public class TestSimpleLocalFileStoragePerf {
 	
 	@Test
 	public void testHeavyVertexWrite() throws GeneratorException {
-		VSubGraph graph = TestGraphGenerator.generateContinuousGraph(100000, true);
+		VSubGraph graph = TestGraphGenerator.generateContinuousGraph(PERF_VERTEX_COUNT, true);
 		long time = System.currentTimeMillis();
 		VStorageSink sink = new SimpleLocalFileStorageSink("local-ssd", storageConfig, null);
 		try {

@@ -29,6 +29,7 @@ import org.veronica.core.structures.ReadOnlyShardException;
 import org.veronica.core.structures.ShardInitializationException;
 import org.veronica.core.structures.VGraphShard;
 import org.veronica.core.structures.VVertex;
+import org.veronica.core.structures.VElement.IdGenerator;
 
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
@@ -87,6 +88,13 @@ public class VSubGraph extends VGraphShard {
 	 */
 	public VVertex getVertex(String vertexId) {
 		return shardVertices.get(vertexId);
+	}
+	
+	public VVertex getVertex(String id, String label) {
+		if(label!=null)
+			return shardVertices.get(IdGenerator.hashSHA1(id+"_"+label));
+		else
+			return shardVertices.get(IdGenerator.hashSHA1(id)); 
 	}
 
 	/**

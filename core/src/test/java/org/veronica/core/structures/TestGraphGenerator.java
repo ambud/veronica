@@ -72,6 +72,12 @@ public class TestGraphGenerator {
 				}
 				if(vertex==null) {
 					throw new Exception("Returned vertex is null");
+				}else{
+					if(!randomLabel)
+						if(nodeNumber>0 && (nodeNumber+1)<numNodes) {
+							VVertex vertex2 = graph.getVertex(String.valueOf(nodeNumber-1), null);
+							vertex.addEdge(vertex2, randomLabel?UUID.randomUUID().toString():null, true);
+						}
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
