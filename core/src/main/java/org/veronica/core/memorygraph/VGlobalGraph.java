@@ -16,6 +16,7 @@
  */
 package org.veronica.core.memorygraph;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -32,6 +33,7 @@ import org.veronica.core.structures.InvalidOperationException;
 import org.veronica.core.structures.ReadOnlyShardException;
 import org.veronica.core.structures.ShardInitializationException;
 import org.veronica.core.structures.VGraphInterface;
+import org.veronica.core.structures.VGraphShard;
 import org.veronica.core.structures.VVertex;
 
 /**
@@ -43,6 +45,7 @@ import org.veronica.core.structures.VVertex;
  */
 public class VGlobalGraph implements VGraphInterface {
 	
+	private static final long serialVersionUID = -5422866707283657373L;
 	private ConcurrentMap<String, VSubGraph> graphShardHash;
 	private VStorageSink sink;
 	private VShardStrategy shardingStrategy;
@@ -137,10 +140,11 @@ public class VGlobalGraph implements VGraphInterface {
 	 * @param graphId
 	 * @return graph shard object
 	 */
+	@Override
 	public VSubGraph getGraphShard(String graphId) {
 		return graphShardHash.get(graphId);
 	}
-
+	
 	@Override
 	public VVertex removeVertex(String id) throws InvalidOperationException {
 		throw new InvalidOperationException("Global graph implementation does not currently support removing vertices");
@@ -149,6 +153,11 @@ public class VGlobalGraph implements VGraphInterface {
 	@Override
 	public void removeVertex(VVertex vertex) throws InvalidOperationException {
 		throw new InvalidOperationException("Global graph implementation does not currently support removing vertices");
+	}
+
+	@Override
+	public List<VGraphShard> getShards() {
+		return new ArrayList<VGraphShard>(graphShardHash.values());
 	}
 
 }
