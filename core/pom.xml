@@ -5,7 +5,7 @@
 
   <parent>
   	<relativePath>../pom.xml</relativePath>
-  	<groupId>org.veronica</groupId>
+  	<groupId>org.veronicadb</groupId>
   	<artifactId>parent</artifactId>
   	<version>0.0.1-SNAPSHOT</version>
   </parent>
