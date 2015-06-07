@@ -83,7 +83,7 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 		ssd = config.getBoolean(CONF_STORAGE_SSD, false);
 		logger.info("Storage is "+(ssd?"SSD":" not SSD"));
 		storageDirectory = new File(storageDirectoryPathString);
-		compress = config.getBoolean("compress", true);
+		compress = config.getBoolean("compress", false);
 		if(compress) {
 			compressor = GzipCompressorOutputStream.class;
 			decompressor = GzipCompressorInputStream.class;
@@ -104,7 +104,7 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 	}
 
 	@Override
-	public VSubGraph readIndex(String graphId) throws VStorageFailureException {
+	public VSubGraph readIndex(long graphId) throws VStorageFailureException {
 		throw new VStorageFailureException(SimpleLocalFileStorageSink.class, "Unsupported operation read index");
 	}
 
@@ -115,11 +115,11 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 
 	@SuppressWarnings("resource")
 	@Override
-	public VSubGraph readGraphBlock(String graphId)
+	public VSubGraph readGraphBlock(long graphId)
 			throws VStorageFailureException {
 		logger.info("Read requsted for graphid:"+graphId);
 		VSubGraph graph = null;
-		File[] files = storageDirectory.listFiles((dir, name)->name.startsWith(graphId));
+		File[] files = storageDirectory.listFiles((dir, name)->name.startsWith(graphId+""));
 		if(files.length==0) {
 			throw new VStorageFailureException(SimpleLocalFileStorageSink.class, "Invalid graphId:"+graphId+" can't read block from disk");
 		}
@@ -146,7 +146,7 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 			throw new VStorageFailureException(SimpleLocalFileStorageSink.class, "Failed to initialize pluggable de-compressor", e);
 		}
 		try{
-			String readGraphId = readGraphId(stream);
+			long readGraphId = readGraphId(stream);
 			int vertexCount = stream.readInt();
 			byte[] bloomBytes = null;
 			if(getGraph()!=null) {
@@ -192,7 +192,7 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 	public long writeGraphBlock(VSubGraph graph)
 			throws VStorageFailureException {
 		long time = System.currentTimeMillis();
-		String graphId = graph.getGraphId();
+		long graphId = graph.getGraphId();
 		File graphShardFile = new File(storageDirectory, graphId+"_"+time+".vr");
 		DataOutputStream stream = null;
 		OutputStream baseStream = null;
@@ -240,8 +240,8 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 	protected List<VVertex> readVertices(VSubGraph graph, DataInputStream stream) throws IOException {
 		List<VVertex> vertices = new ArrayList<VVertex>();
 		while(stream.available()>0) {
-			String id = readElementId(stream);
-			String label = readElementId(stream);
+			long id = readElementId(stream);
+			String label = readElementLabel(stream);
 			List<VEdge> edges = readVertexEdge(graph, id, stream);
 			VVertex vertex = new VVertex(graph, id, label);
 			vertex.getEdges().addAll(edges);
@@ -256,13 +256,13 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 		for (VEdge edge : vertex.getEdges()) {
 			writeElementId(stream, edge);
 			writeElementLabel(stream, edge);
-			String otherVertex = edge.getOtherVertex(vertex.getId());
+			long otherVertex = edge.getOtherVertex(vertex.getId());
 			boolean direction = edge.isInV(otherVertex);
 			stream.writeBoolean(direction);
-			boolean sharedShard = edge.getOutVGraph().getShardId().equals(edge.getGraphShard().getShardId());
+			boolean sharedShard = edge.getOutVGraph().getShardId()==edge.getGraphShard().getShardId();
 			stream.writeBoolean(sharedShard);
 			if(!sharedShard) {
-				if(vertex.getGraphShard().getShardId().equals(edge.getGraphShard().getShardId())) {
+				if(vertex.getGraphShard().getShardId()==edge.getGraphShard().getShardId()) {
 					writeElementId(edge.getOutVGraph().getShardId(), stream);
 				}else{
 					writeElementId(edge.getGraphShard().getShardId(), stream);
@@ -272,11 +272,11 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 		}
 	}
 	
-	protected List<VEdge> readVertexEdge(VSubGraph graph, String vertexId, DataInputStream stream) throws IOException {
+	protected List<VEdge> readVertexEdge(VSubGraph graph, long vertexId, DataInputStream stream) throws IOException {
 		int edgeCount = stream.readInt();
 		List<VEdge> edges = new ArrayList<VEdge>(edgeCount);
 		for(int i=0;i<edgeCount;i++) {
-			String edgeId = readElementId(stream);
+			long edgeId = readElementId(stream);
 			String edgeLabel = readElementLabel(stream);
 			boolean direction = stream.readBoolean();
 			boolean sharedShard = stream.readBoolean();
@@ -284,14 +284,14 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 			if(sharedShard) {
 				graphTwo = graph;
 			}else{
-				String graphTwoId = readElementId(stream);
+				long graphTwoId = readElementId(stream);
 				if(getGraph()!=null) {
 					graphTwo = getGraph().getGraphShard(graphTwoId);
 				}else{
 					graphTwo = new VSubGraph(graphTwoId, 1);
 				}
 			}
-			String otherVertexId = readElementId(stream);
+			long otherVertexId = readElementId(stream);
 			if(direction) {
 				VEdge edge = new VEdge(edgeId, edgeLabel, otherVertexId, graphTwo, vertexId, graph);
 				edges.add(edge);
@@ -324,16 +324,13 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 		}
 	}
 
-	protected void writeElementId(DataOutputStream stream,VElement element)
+	protected void writeElementId(DataOutputStream stream, VElement element)
 			throws IOException {
-		stream.writeInt(element.getId().length());
-		stream.write(element.getId().getBytes());
+		stream.writeLong(element.getId());
 	}
 	
-	protected String readElementId(DataInputStream stream) throws IOException {
-		byte[] vertexId = new byte[stream.readInt()];
-		stream.readFully(vertexId);
-		return new String(vertexId);
+	protected long readElementId(DataInputStream stream) throws IOException {
+		return stream.readLong();
 	}
 
 	protected void writeGraphBloom(VSubGraph graph, DataOutputStream stream)
@@ -349,16 +346,13 @@ public class SimpleLocalFileStorageSink extends VStorageSink {
 		return bloom;
 	}
 
-	protected void writeElementId(String graphId, DataOutputStream stream)
+	protected void writeElementId(long id, DataOutputStream stream)
 			throws IOException {
-		stream.writeInt(graphId.length());
-		stream.write(graphId.getBytes());
+		stream.writeLong(id);
 	}
 	
-	protected String readGraphId(DataInputStream stream) throws IOException {
-		byte[] id = new byte[stream.readInt()];
-		stream.readFully(id);
-		return new String(id);
+	protected long readGraphId(DataInputStream stream) throws IOException {
+		return stream.readLong();
 	}
 	
 }

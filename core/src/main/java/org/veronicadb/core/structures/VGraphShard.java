@@ -1,16 +1,17 @@
 package org.veronicadb.core.structures;
 
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 public abstract class VGraphShard {
 
-	protected final String shardId;
+	protected final long shardId;
 	protected final int shardSize;
 	private AtomicLong lastFlush = new AtomicLong(-1);
 	private AtomicBoolean readOnly = new AtomicBoolean(false);
 	
-	public VGraphShard(String shardId, int shardSize) {
+	public VGraphShard(long shardId, int shardSize) {
 		this.shardId = shardId;
 		this.shardSize = shardSize;
 	}
@@ -33,13 +34,13 @@ public abstract class VGraphShard {
 	 */
 	protected abstract void addVertex(VVertex vertex) throws ReadOnlyShardException;
 
-	public abstract VVertex getVertex(String vertexId);
+	public abstract VVertex getVertex(long vertexId) throws IOException;
 	
-	public abstract boolean vertexExists(String vertexId);
+	public abstract boolean vertexExists(long vertexId);
 	/**
 	 * @return the shardId
 	 */
-	public String getShardId() {
+	public long getShardId() {
 		return shardId;
 	}
 

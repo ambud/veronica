@@ -13,6 +13,6 @@ public interface VGraphInterface extends Serializable {
 	
 	public List<VGraphShard> getShards();
 	
-	public VGraphShard getGraphShard(String shardId);
+	public VGraphShard getGraphShard(long shardId);
 	
 }

@@ -46,13 +46,13 @@ import org.veronicadb.core.structures.VVertex;
 public class VGlobalGraph implements VGraphInterface {
 	
 	private static final long serialVersionUID = -5422866707283657373L;
-	private ConcurrentMap<String, VSubGraph> graphShardHash;
+	private ConcurrentMap<Long, VSubGraph> graphShardHash;
 	private VStorageSink sink;
 	private VShardStrategy shardingStrategy;
 	private ScheduledExecutorService backgroundService;
 	
 	private VGlobalGraph() {
-		graphShardHash = new ConcurrentHashMap<String, VSubGraph>();
+		graphShardHash = new ConcurrentHashMap<Long, VSubGraph>();
 		backgroundService = Executors.newScheduledThreadPool(1);
 	}
 	
@@ -85,7 +85,7 @@ public class VGlobalGraph implements VGraphInterface {
 	 * @throws ShardInitializationException 
 	 */
 	public VVertex addVertex(String id, String label) throws InvalidOperationException, ShardInitializationException {
-		String graphId = shardingStrategy.getGraphId(id, label, null);
+		long graphId = shardingStrategy.getGraphId(id, label, null);
 		if(!graphShardHash.containsKey(graphId)) {
 			VSubGraph subGraph = new VSubGraph(graphId, shardingStrategy.getShardSize());
 			subGraph.init();
@@ -141,7 +141,7 @@ public class VGlobalGraph implements VGraphInterface {
 	 * @return graph shard object
 	 */
 	@Override
-	public VSubGraph getGraphShard(String graphId) {
+	public VSubGraph getGraphShard(long graphId) {
 		return graphShardHash.get(graphId);
 	}
 	

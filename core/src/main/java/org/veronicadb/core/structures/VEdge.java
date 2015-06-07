@@ -16,14 +16,23 @@
  */
 package org.veronicadb.core.structures;
 
+import java.io.IOException;
+
 
 public class VEdge extends VElement {
 	
 	private VGraphShard outVGraph;
-	private String inV;
-	private String outV;
+	private long inV;
+	private long outV;
 	
-	public VEdge(String id, String label, String inV, VGraphShard inGraph, String outV, VGraphShard outGraph) {
+	public VEdge(long id, String label, long inV, VGraphShard inGraph, long outV, VGraphShard outGraph) {
+		super(inGraph, id, label);
+		this.inV = inV;
+		this.outV = outV;
+		this.outVGraph = outGraph;
+	}
+	
+	public VEdge(String id, String label, long inV, VGraphShard inGraph, long outV, VGraphShard outGraph) {
 		super(inGraph, id, label);
 		this.inV = inV;
 		this.outV = outV;
@@ -32,29 +41,31 @@ public class VEdge extends VElement {
 	
 	/**
 	 * @return the inV
+	 * @throws IOException 
 	 */
-	public VVertex getInVertex() {
+	public VVertex getInVertex() throws IOException {
 		return getGraphShard().getVertex(inV);
 	}
 
 	/**
 	 * @return the outV
+	 * @throws IOException 
 	 */
-	public VVertex getOutVertex() {
+	public VVertex getOutVertex() throws IOException {
 		return getGraphShard().getVertex(outV);
 	}
 	
 	/**
 	 * @return the inV
 	 */
-	protected String getInV() {
+	protected long getInV() {
 		return inV;
 	}
 
 	/**
 	 * @return the outV
 	 */
-	protected String getOutV() {
+	protected long getOutV() {
 		return outV;
 	}
 
@@ -70,20 +81,21 @@ public class VEdge extends VElement {
 	 * @param vertex
 	 * @return is inner vertex
 	 */
-	public boolean isInV(String vertexId) {
-		return inV.equalsIgnoreCase(vertexId);
+	public boolean isInV(long vertexId) {
+		return inV==vertexId;
 	}
 	
 	/**
 	 * Get other vertex of this edge
 	 * @param vertex
 	 * @return other vertex
+	 * @throws IOException 
 	 */
-	public VVertex getOtherVertex(VVertex vertex) {
-		return inV.equalsIgnoreCase(vertex.getId())?getOutVertex():getInVertex();
+	public VVertex getOtherVertex(VVertex vertex) throws IOException {
+		return (inV==vertex.getId())?getOutVertex():getInVertex();
 	}
 	
-	public String getGraphId(String vertexId) {
+	public long getGraphId(long vertexId) {
 		if(isInV(vertexId)) {
 			return getGraphShard().getShardId();
 		}else{
@@ -95,8 +107,8 @@ public class VEdge extends VElement {
 	 * @param vertexId
 	 * @return other vertex
 	 */
-	public String getOtherVertex(String vertexId) {
-		return inV.equalsIgnoreCase(vertexId)?outV:inV;
+	public long getOtherVertex(long vertexId) {
+		return (inV==vertexId)?outV:inV;
 	}
 	
 	

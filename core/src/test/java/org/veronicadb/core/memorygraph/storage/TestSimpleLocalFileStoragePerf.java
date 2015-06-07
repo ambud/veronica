@@ -88,6 +88,7 @@ public class TestSimpleLocalFileStoragePerf {
 			logger.info("Written file:"+((double)bytes)/(1024*1024)+" MB");
 			VSubGraph graphBlock = sink.readGraphBlock(graph.getGraphId());
 			assertNotNull(graphBlock);
+			assertEquals(PERF_VERTEX_COUNT, graphBlock.getShardVertices().size());
 		} catch (VStorageFailureException e) {
 			e.printStackTrace();
 			fail("Storage exception:"+e.getMessage());

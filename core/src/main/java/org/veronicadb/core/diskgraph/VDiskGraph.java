@@ -51,7 +51,7 @@ public class VDiskGraph implements VGraphInterface {
 	}
 
 	@Override
-	public VGraphShard getGraphShard(String shardId) {
+	public VGraphShard getGraphShard(long shardId) {
 		// TODO Auto-generated method stub
 		return null;
 	}

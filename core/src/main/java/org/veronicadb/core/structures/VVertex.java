@@ -28,6 +28,11 @@ public class VVertex extends VElement {
 		edges = new ArrayList<VEdge>();
 	}
 	
+	public VVertex(VGraphShard graph, long id, String label) {
+		super(graph, id, label);
+		edges = new ArrayList<VEdge>();
+	}
+	
 	/**
 	 * Add an edge between this vertex and the supplied vertex. 
 	 * 

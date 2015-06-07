@@ -19,7 +19,6 @@ package org.veronicadb.core.memorygraph;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,9 +26,9 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.veronicadb.core.structures.ReadOnlyShardException;
 import org.veronicadb.core.structures.ShardInitializationException;
+import org.veronicadb.core.structures.VElement.IdGenerator;
 import org.veronicadb.core.structures.VGraphShard;
 import org.veronicadb.core.structures.VVertex;
-import org.veronicadb.core.structures.VElement.IdGenerator;
 
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
@@ -48,14 +47,14 @@ import com.google.common.hash.Funnels;
  */
 public class VSubGraph extends VGraphShard {
 
-	private ConcurrentMap<String, VVertex> shardVertices;
+	private ConcurrentMap<Long, VVertex> shardVertices;
 	// bloom filter for the vertices in this subgraph
-	private BloomFilter<CharSequence> subGraphBloom;
+	private BloomFilter<Long> subGraphBloom;
 	
-	public VSubGraph(String graphId, int shardSize) {
+	public VSubGraph(long graphId, int shardSize) {
 		super(graphId, shardSize);
-		shardVertices = new ConcurrentHashMap<String, VVertex>();
-		subGraphBloom = BloomFilter.create(Funnels.stringFunnel(Charset.defaultCharset()), shardSize, 0.0001);
+		shardVertices = new ConcurrentHashMap<Long, VVertex>();
+		subGraphBloom = BloomFilter.create(Funnels.longFunnel(), shardSize, 0.0001);
 		isReadOnly().set(false);
 	}
 
@@ -86,21 +85,25 @@ public class VSubGraph extends VGraphShard {
 	 * @param vertexId
 	 * @return vertexId
 	 */
-	public VVertex getVertex(String vertexId) {
+	public VVertex getVertex(long vertexId) {
 		return shardVertices.get(vertexId);
+	}
+	
+	public VVertex getVertex(String vertexId) {
+		return getVertex(vertexId, null);
 	}
 	
 	public VVertex getVertex(String id, String label) {
 		if(label!=null)
-			return shardVertices.get(IdGenerator.hashSHA1(id+"_"+label));
+			return shardVertices.get(IdGenerator.hash(id+"_"+label));
 		else
-			return shardVertices.get(IdGenerator.hashSHA1(id)); 
+			return shardVertices.get(IdGenerator.hash(id)); 
 	}
 
 	/**
 	 * @return the graphId
 	 */
-	public String getGraphId() {
+	public Long getGraphId() {
 		return getShardId();
 	}
 
@@ -117,8 +120,12 @@ public class VSubGraph extends VGraphShard {
 	 * @return if vertex might be present in this subgraph
 	 */
 	@Override
-	public boolean vertexExists(String vertexId) {
+	public boolean vertexExists(long vertexId) {
 		return subGraphBloom.mightContain(vertexId);
+	}
+	
+	public boolean vertexExists(String vertexId) {
+		return subGraphBloom.mightContain(IdGenerator.hash(vertexId));
 	}
 	
 	/**
@@ -147,7 +154,7 @@ public class VSubGraph extends VGraphShard {
 	 * @throws IOException
 	 */
 	protected void loadBloom(byte[] bloomBytes) throws IOException {
-		subGraphBloom = BloomFilter.readFrom(new ByteArrayInputStream(bloomBytes), Funnels.stringFunnel(Charset.defaultCharset()));
+		subGraphBloom = BloomFilter.readFrom(new ByteArrayInputStream(bloomBytes), Funnels.longFunnel());
 	}
 	
 	/**
@@ -156,7 +163,7 @@ public class VSubGraph extends VGraphShard {
 	 */
 	public byte[] getBloomBytes() throws IOException {
 		ByteArrayOutputStream os = new ByteArrayOutputStream(1000);
-		BloomFilter<CharSequence> clone = null;
+		BloomFilter<Long> clone = null;
 		synchronized (subGraphBloom) {
 			clone = subGraphBloom.copy();
 		}

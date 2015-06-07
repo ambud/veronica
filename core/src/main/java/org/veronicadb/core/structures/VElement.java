@@ -21,10 +21,11 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.configuration.ConfigurationException;
 import org.veronicadb.core.configuration.ConfigurationManager;
 import org.veronicadb.core.memorygraph.VSubGraph;
+
+import com.google.common.hash.Hashing;
 
 
 /**
@@ -36,16 +37,22 @@ public abstract class VElement {
 	
 	private Map<String, Object> propertyMap;
 	private String key;
-	private String id;
+	private long id;
 	private String label;
 	private VGraphShard graph;
 	
 	public VElement(VGraphShard graph, String id, String label) {
 		this.graph = graph;
+		this.label = label;
+		this.propertyMap = new ConcurrentHashMap<String, Object>();
+		computeId(id);
+	}
+	
+	public VElement(VGraphShard graph, long id, String label) {
+		this.graph = graph;
 		this.id = id;
 		this.label = label;
 		this.propertyMap = new ConcurrentHashMap<String, Object>();
-		computeId();
 	}
 	
 	public VElement(VSubGraph graph, String id, String label, String key) {
@@ -53,14 +60,14 @@ public abstract class VElement {
 		this.key = key;
 	}
 	
-	protected void computeId() {
-		if(id==null) {
-			id = IdGenerator.hashSHA1(UUID.randomUUID().toString());
+	protected void computeId(String stringId) {
+		if(stringId==null) {
+			id = IdGenerator.hash(UUID.randomUUID().toString());
 		}else{
 			if(label!=null) {
-				id = IdGenerator.hashSHA1(label+"_"+id);
+				id = IdGenerator.hash(label+"_"+stringId);
 			}else {
-				id = IdGenerator.hashSHA1(id);
+				id = IdGenerator.hash(stringId);
 			}
 		}
 	}
@@ -81,8 +88,7 @@ public abstract class VElement {
 	 */
 	public void put(String propertyName, Object propertyValue) {
 		if(key!=null && key.equalsIgnoreCase(propertyName)) {
-			id = propertyValue.toString();
-			computeId();
+			computeId(propertyValue.toString());
 		}
 		propertyMap.put(propertyName, propertyValue);
 	}
@@ -97,7 +103,7 @@ public abstract class VElement {
 	/**
 	 * @return the id
 	 */
-	public String getId() {
+	public long getId() {
 		return id;
 	}
 
@@ -152,15 +158,15 @@ public abstract class VElement {
 		private IdGenerator() {
 		}
 		
-		public static String hashSHA1(String id) {
+		public static long hash(String id) {
 			if(hashAlgo == 0) {
-				return DigestUtils.sha1Hex(id);
+				return Hashing.sha1().hashUnencodedChars(id).asLong();
 			}else if(hashAlgo == 1) {
-				return DigestUtils.md5Hex(id);
+				return Hashing.md5().hashUnencodedChars(id).asLong();
 			}else if(hashAlgo == 2){
-				return DigestUtils.sha256Hex(id);
+				return Hashing.sha256().hashUnencodedChars(id).asLong();
 			}else {
-				return id;
+				return -1;
 			}
 		}
 		

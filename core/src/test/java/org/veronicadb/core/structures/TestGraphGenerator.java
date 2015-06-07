@@ -55,7 +55,7 @@ public class TestGraphGenerator {
 	}
 	
 	public static VSubGraph generateContinuousGraph(int numNodes, boolean randomLabel) throws GeneratorException {
-		VSubGraph graph = new VSubGraph(UUID.randomUUID().toString(), numNodes);
+		VSubGraph graph = new VSubGraph(UUID.randomUUID().getMostSignificantBits(), numNodes);
 		try {
 			graph.init();
 		} catch (ShardInitializationException e) {
