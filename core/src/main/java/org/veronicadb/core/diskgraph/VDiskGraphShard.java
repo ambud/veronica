@@ -1,3 +1,19 @@
+/*
+ * Copyright 2015 Ambud Sharma
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.2
+ */
 package org.veronicadb.core.diskgraph;
 
 import java.io.File;
@@ -8,7 +24,6 @@ import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
-import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -40,7 +55,7 @@ public class VDiskGraphShard extends VGraphShard {
 	public VDiskGraphShard(long shardId, int shardSize) {
 		super(shardId, shardSize);
 		this.shardBloom = BloomFilter.create(Funnels.longFunnel(), shardSize, 0.0001);
-		this.cache = new LinkedHashMap<String, VVertex>((int)(shardSize/0.60), 0.75f, true);
+		this.cache = new LinkedHashMap<String, VVertex>((int)(shardSize/0.40), 0.75f, true);
 		this.shardFileLocation = CONFIG_STORAGE_DIRECTORY+"/"+shardId;
 		this.fileReadPointers = new ArrayBlockingQueue<RandomAccessFile>(10, true);
 		this.elementLocks = new HashSet<Long>();
